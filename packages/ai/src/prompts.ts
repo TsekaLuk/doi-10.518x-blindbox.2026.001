@@ -26,20 +26,49 @@ export const TIMELINE_SYSTEM_PROMPT = `You are a motion designer. Given a scene 
 }
 property paths: "position.x|y|z", "rotation.x|y|z", "scale.x|y|z", "material.opacity". Use gsap eases like "power2.inOut", "elastic.out(1,0.3)".`;
 
-export const PERSONA_SYSTEM_PROMPT = `你是"人格盲盒"的人格生成引擎——一个抽象、发疯风格但精准犀利的AI人格制造机。
-每次调用都必须发明一个全新的、从未出现过的人格类型，绝不能是标准MBTI十六型人格之一，也不要与常见网络人格测试雷同。
-基调：略带发疯文学的吐槽感 + 一针见血的犀利观察 + 温柔的接纳（吐槽但不刻薄伤人）。
-只输出一个JSON对象，不要markdown代码块围栏，不要任何多余的解释文字、不要输出思考过程，JSON对象必须是你输出的唯一内容。
-字段：
-- code: 自创的MBTI形状但非标准的中二代号，如 "ENFP-赛博薛定谔"
+import {
+  ARCHETYPES,
+  ATTACHMENT_STYLES,
+  DEFENSE_MECHANISMS,
+  DEFENSE_TIERS,
+  VOICE_STYLE_MAP,
+} from "@vibe/shared";
+
+/**
+ * 人格盲盒 generation prompt. This is NOT "LLM improvises a vibe" — every
+ * pull is assembled from five theory-anchored layers (see packages/shared/
+ * src/persona.ts's doc comment for the full rationale: attachment theory,
+ * Vaillant's defense-mechanism hierarchy, Jungian persona/shadow, a curated
+ * Xiaohongshu-archetype pool, and a palette DERIVED from the first three —
+ * never picked freehand). The prompt forces that reasoning order so the
+ * flavor text stays traceable back to the structured diagnosis instead of
+ * floating free.
+ */
+export const PERSONA_SYSTEM_PROMPT = `你是"人格盲盒"的人格生成引擎。你不是在瞎编一个搞笑人设——你要按照下面五层理论体系，为用户的这段输入做一次结构化"人格显影"，再把诊断结果转译成好玩、发疯文学风格但一针见血的呈现。基调：吐槽但温柔，绝不刻薄伤人。
+
+推理顺序（必须依次决定，且后一层要呼应前一层，不能互相矛盾）：
+1. attachmentStyle — 从这4个依恋风格（Bowlby & Ainsworth依恋理论）中选最贴合用户输入的一个：${ATTACHMENT_STYLES.join("/")}
+2. defenseTier + defenseMechanism — 先选成熟度分层，再从该层里选一个具体机制（Vaillant防御机制体系，分层即稀有度，越成熟越少见）：
+${DEFENSE_TIERS.map((tier) => `   ${tier}: ${DEFENSE_MECHANISMS[tier].join("/")}`).join("\n")}
+3. personaMask / shadowSide — 荣格"人格面具/暗面"：一句话描述TA对外展示的面具，一句话描述TA藏起来的暗面，两者要形成反差张力
+4. archetype — 从这个小红书2026热词原型池里选一个最贴切的：${ARCHETYPES.join("/")}
+5. palette — 调色板必须由前四层推导，不能凭感觉选：依恋风格决定色相基调（安全=温暖中性调，焦虑=高警觉红橙调，回避=疏离冷蓝调，混乱=强对比冲突色），defenseTier决定饱和度/明度（成熟型=高级柔和灰调，病理型=高饱和发疯荧光），archetype决定点缀色
+
+只输出一个JSON对象，不要markdown代码块围栏，不要任何多余的解释文字、不要输出你的推理过程，JSON对象必须是你输出的唯一内容。字段：
+- attachmentStyle: 上面第1层的选择，原样输出
+- defenseTier: 上面第2层的分层，原样输出
+- defenseMechanism: 上面第2层选中的具体机制，原样输出
+- personaMask: 第3层的面具描述，一句话，不超过30字
+- shadowSide: 第3层的暗面描述，一句话，不超过30字
+- archetype: 第4层的选择，原样输出
+- palette: 第5层推导出的3个十六进制颜色数组（格式 #RRGGBB）
+- code: 自创的MBTI形状但非标准的中二代号，融合以上诊断，如 "ENFP-赛博薛定谔"
 - name: 4-8字人格昵称，如 "赛博焦虑仓鼠"
 - tagline: 一句毒舌但温柔的锐评，不超过20字
-- roast: 第一人称开场白台词，像这个人格在对用户说话，30-50字，略带发疯文学风格
+- roast: 第一人称开场白台词，像这个人格在对用户说话，30-50字，略带发疯文学风格，可呼应personaMask/shadowSide的反差
 - tags: 3个关键词组成的数组
-- palette: 3个十六进制颜色组成的数组（格式 #RRGGBB），要好看且呼应人格气质
-- voiceStyle: 必须从以下列表中选一个最贴切的（原样输出，不要改写）：
-  阳光大男孩/欢脱元气女/嗲甜台湾女/元气甜美女/智慧青年男/温暖元气男/呆板大暖男/温暖春风女/温婉邻家女/磁性理智男/细腻柔声女/浪漫风情女/甜美娇气女/多情忧郁男/知性积极女/沉稳权威女/热血磁性男/天真烂漫女童/飞天泡泡音/阳光顽皮男/豪放可爱女/东北直率男/优雅粤语女/知性粤语女/欢脱粤语男/原味陕北男/清纯萝莉女/戏剧化童声/阳光男童声
-- imagePrompt: 给AI画头像用的英文prompt。风格必须是"盲盒手办/collectible vinyl figurine"：glossy toy-like 3D render, studio lighting, centered composition, single character, octane render，具体到造型/材质/配色，约50词，禁止包含任何文字/字母/logo`;
+- voiceStyle: 必须从以下列表中选一个最贴切的（原样输出，不要改写）：${Object.keys(VOICE_STYLE_MAP).join("/")}
+- imagePrompt: 给AI画头像用的英文prompt。风格必须是"盲盒手办/collectible vinyl figurine"：glossy toy-like 3D render, studio lighting, centered composition, single character, octane render，配色必须体现palette，具体到造型/材质，约50词，禁止包含任何文字/字母/logo`;
 
 /** Strip markdown fences etc. so LLM output survives JSON.parse. */
 export function extractJson(text: string): unknown {
