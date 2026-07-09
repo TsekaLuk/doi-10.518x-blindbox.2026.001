@@ -1,0 +1,80 @@
+/*
+ * Astryx token bridge.
+ *
+ * Astryx components consume the generic --color-*, --font-family-*,
+ * --spacing-*, and --radius-* token surface. Project brand tokens stay under
+ * --vibe-* to avoid collisions with Astryx and Tailwind internals.
+ */
+:root[data-astryx-theme="neutral"],
+[data-astryx-theme="neutral"] {
+  color-scheme: dark;
+
+  --font-family-body: var(--vibe-font-mori);
+  --font-family-heading: var(--vibe-font-mori);
+  --font-family-code: ui-monospace, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --color-background-body: var(--vibe-color-just-black);
+  --color-background-surface: var(--vibe-color-off-black);
+  --color-background-card: var(--vibe-color-off-black);
+  --color-background-popover: var(--vibe-color-off-black);
+  --color-background-muted: color-mix(in srgb, var(--vibe-color-surface-25) 32%, transparent);
+
+  --color-text-primary: var(--vibe-color-surface-cream);
+  --color-text-secondary: var(--vibe-color-surface-50);
+  --color-text-disabled: var(--vibe-color-surface-25);
+  --color-text-accent: var(--vibe-color-shockingly-green);
+
+  --color-accent: var(--vibe-color-shockingly-green);
+  --color-accent-muted: color-mix(in srgb, var(--vibe-color-shockingly-green) 18%, transparent);
+  --color-on-accent: var(--vibe-color-just-black);
+
+  --color-icon-accent: var(--vibe-color-shockingly-green);
+  --color-icon-primary: var(--vibe-color-surface-cream);
+  --color-icon-secondary: var(--vibe-color-surface-50);
+  --color-icon-disabled: var(--vibe-color-surface-25);
+
+  --color-border: var(--vibe-color-surface-25);
+  --color-border-emphasized: color-mix(in srgb, var(--vibe-color-surface-cream) 60%, transparent);
+  --color-neutral: color-mix(in srgb, var(--vibe-color-surface-cream) 10%, transparent);
+  --color-overlay: color-mix(in srgb, var(--vibe-color-just-black) 80%, transparent);
+  --color-overlay-hover: color-mix(in srgb, var(--vibe-color-surface-cream) 8%, transparent);
+  --color-overlay-pressed: color-mix(in srgb, var(--vibe-color-surface-cream) 14%, transparent);
+  --color-skeleton: var(--vibe-color-surface-25);
+  --color-track: var(--vibe-color-surface-25);
+  --color-shadow: transparent;
+
+  --color-background-green: color-mix(in srgb, var(--vibe-color-shockingly-green) 18%, transparent);
+  --color-border-green: var(--vibe-color-shockingly-green);
+  --color-icon-green: var(--vibe-color-shockingly-green);
+  --color-text-green: var(--vibe-color-light-green);
+
+  --color-background-orange: color-mix(in srgb, var(--vibe-color-orangey) 18%, transparent);
+  --color-border-orange: var(--vibe-color-orangey);
+  --color-icon-orange: var(--vibe-color-orangey);
+  --color-text-orange: var(--vibe-color-orangey);
+
+  --color-background-pink: color-mix(in srgb, var(--vibe-color-pink) 18%, transparent);
+  --color-border-pink: var(--vibe-color-pink);
+  --color-icon-pink: var(--vibe-color-pink);
+  --color-text-pink: var(--vibe-color-pink);
+
+  --color-background-purple: color-mix(in srgb, var(--vibe-color-lilac) 18%, transparent);
+  --color-border-purple: var(--vibe-color-lilac);
+  --color-icon-purple: var(--vibe-color-lilac);
+  --color-text-purple: var(--vibe-color-lilac);
+
+  --color-background-blue: color-mix(in srgb, var(--vibe-color-blue) 18%, transparent);
+  --color-border-blue: var(--vibe-color-blue);
+  --color-icon-blue: var(--vibe-color-blue);
+  --color-text-blue: var(--vibe-color-blue);
+
+  --radius-element: var(--vibe-radius-lg);
+  --radius-container: var(--vibe-radius-lg);
+  --radius-page: var(--vibe-radius-lg);
+  --radius-chat: var(--vibe-radius-buttons);
+  --radius-full: var(--vibe-radius-pills);
+
+  --shadow-low: none;
+  --shadow-med: none;
+  --shadow-high: none;
+}

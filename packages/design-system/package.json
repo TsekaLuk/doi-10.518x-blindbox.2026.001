@@ -1,0 +1,27 @@
+{
+  "name": "@vibe/design-system",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./tokens.json",
+    "./tokens.json": "./tokens.json",
+    "./tailwind.css": "./tailwind.css",
+    "./variables.css": "./variables.css",
+    "./astryx.css": "./astryx.css",
+    "./DESIGN.md": "./DESIGN.md",
+    "./CONSUMPTION.md": "./CONSUMPTION.md",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "astryx.css",
+    "CONSUMPTION.md",
+    "DESIGN.md",
+    "tailwind.css",
+    "tokens.json",
+    "variables.css"
+  ]
+}

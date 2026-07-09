@@ -1,0 +1,22 @@
+{
+  "name": "@vibe/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@hono/trpc-server": "^0.4.0",
+    "@trpc/server": "^11.0.0",
+    "@vibe/ai": "workspace:*",
+    "@vibe/scene": "workspace:*",
+    "@vibe/shared": "workspace:*",
+    "hono": "^4.6.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0"
+  }
+}

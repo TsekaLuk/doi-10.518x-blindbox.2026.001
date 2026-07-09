@@ -1,0 +1,86 @@
+:root {
+  /* Colors */
+  --vibe-color-just-black: #0e100f;
+  --vibe-color-surface-cream: #fffce1;
+  --vibe-color-surface-50: #7c7c6f;
+  --vibe-color-surface-25: #42433d;
+  --vibe-color-off-black: #191919;
+  --vibe-color-shockingly-green: #0ae448;
+  --vibe-gradient-shockingly-green: linear-gradient(114.41deg, #0ae448 20.74%, #abff84 65.5%);
+  --vibe-color-light-green: #abff84;
+  --vibe-color-orangey: #ff8709;
+  --vibe-color-pink: #fec5fb;
+  --vibe-color-lilac: #9d95ff;
+  --vibe-color-blue: #00bae2;
+  --vibe-color-core-green: #dfffd1;
+  --vibe-color-lipstick-pink: #f100cb;
+
+  /* Typography — Font Families */
+  --vibe-font-mori: 'Mori', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Typography — Scale */
+  --vibe-text-caption: 14px;
+  --vibe-leading-caption: 1.4;
+  --vibe-tracking-caption: -0.14px;
+  --vibe-text-body-sm: 16px;
+  --vibe-leading-body-sm: 1.15;
+  --vibe-text-body: 19px;
+  --vibe-leading-body: 1.15;
+  --vibe-text-body-lg: 23px;
+  --vibe-leading-body-lg: 1.38;
+  --vibe-tracking-body-lg: -0.23px;
+  --vibe-text-subheading: 34px;
+  --vibe-leading-subheading: 1.2;
+  --vibe-tracking-subheading: -0.34px;
+  --vibe-text-heading-sm: 44px;
+  --vibe-leading-heading-sm: 1.2;
+  --vibe-tracking-heading-sm: -0.44px;
+  --vibe-text-heading: 66px;
+  --vibe-leading-heading: 1.2;
+  --vibe-tracking-heading: -0.66px;
+  --vibe-text-heading-lg: 101px;
+  --vibe-leading-heading-lg: 1;
+  --vibe-tracking-heading-lg: -1.11px;
+  --vibe-text-display: 224px;
+  --vibe-leading-display: 0.9;
+  --vibe-tracking-display: -4.48px;
+
+  /* Typography — Weights */
+  --vibe-font-weight-regular: 400;
+  --vibe-font-weight-semibold: 600;
+
+  /* Spacing */
+  --vibe-spacing-unit: 4px;
+  --vibe-spacing-8: 8px;
+  --vibe-spacing-12: 12px;
+  --vibe-spacing-16: 16px;
+  --vibe-spacing-20: 20px;
+  --vibe-spacing-24: 24px;
+  --vibe-spacing-32: 32px;
+  --vibe-spacing-76: 76px;
+  --vibe-spacing-96: 96px;
+  --vibe-spacing-108: 108px;
+
+  /* Layout */
+  --vibe-page-max-width: 1280px;
+  --vibe-section-gap: 80px;
+  --vibe-card-padding: 24px;
+  --vibe-element-gap: 16px;
+
+  /* Border Radius */
+  --vibe-radius-sm: 1px;
+  --vibe-radius-lg: 8px;
+  --vibe-radius-full: 100px;
+  --vibe-radius-full-2: 9999px;
+
+  /* Named Radii */
+  --vibe-radius-cards: 8px;
+  --vibe-radius-pills: 9999px;
+  --vibe-radius-buttons: 100px;
+  --vibe-radius-smalltags: 8px;
+
+  /* Surfaces */
+  --vibe-surface-canvas: #0e100f;
+  --vibe-surface-nested-panel: #191919;
+  --vibe-surface-cream-surface: #fffce1;
+}

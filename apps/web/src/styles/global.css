@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* Astryx design system (components) */
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/theme-neutral/theme.css";
+
+/* Project design-system layers */
+@import "@vibe/design-system/variables.css";
+@import "@vibe/design-system/astryx.css";
+@import "@vibe/design-system/tailwind.css";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  line-height: var(--vibe-leading-body);
+}
