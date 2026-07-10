@@ -1,25 +1,39 @@
-# Vibe — AI Native Web Experience (Hackathon MVP)
+# 人格盲盒 — Persona Blind Box (Hackathon Product)
 
 Status: active · Started: 2026-07-06
 
-Natural language → 3D scene graph → animated web experience.
-MVP now, productization hooks reserved — see `ARCHITECTURE.md`.
+Talk to an AI. It generates a brand-new, never-repeated "personality" — diagnosed
+through a 6-layer, literature-grounded theory (Big Five, attachment style, defense
+mechanisms, Jungian persona/shadow, an internet-culture archetype, and a derived
+color palette — see `PERSONA_THEORY.md` for full academic citations), revealed via
+a 3D blind-box-opening animation, rendered as a collectible-figurine portrait,
+narrated in character by TTS, and packaged into one shareable result card. Optional:
+live realtime voice conversation with your own generated persona, and a "grow a 3D
+figurine" bonus. Powered by Alibaba Cloud Bailian (阿里云百炼) — real models, no
+placeholders. See `ARCHITECTURE.md` for the module map.
 
 ## Stack
 
 - **Web**: Vite · React 19 · TS · Tailwind v4 · Astryx DS · Three.js/R3F/Drei · GSAP+ScrollTrigger · Zustand
 - **Server**: Bun · Hono · tRPC · SSE (thin AI proxy — the only place API keys live)
-- **AI**: `AIService` interface (`packages/ai`) — fetch impl now, model-router later
+- **AI**: `AIService` interface (`packages/ai`), backed by real Bailian/DashScope models:
+  - Persona generation (thinking): `qwen3.7-plus`
+  - Portrait: `wan2.7-image-pro` (collectible-figurine style; ~60-90s, see `apps/server/src/ai/upstream.ts`)
+  - TTS: `cosyvoice-v3-flash` (29-voice curated preset catalog incl. dialects)
+  - Realtime voice: `qwen3.5-omni-plus-realtime` (WebSocket relay, server never exposes the key)
+  - 3D figurine: Tripo (`Tripo-P1.0`/`Tripo-H3.1`) via direct DashScope REST
 - **Data**: Scene Graph / Timeline / Assets as versioned zod-validated JSON (`packages/scene`)
 
 ## Run
 
 ```bash
-cp .env.example .env       # fill AI_API_KEY (any OpenAI-compatible endpoint)
+cp .env.example .env       # fill AI_API_KEY (DashScope/Bailian key), BAILIAN_WORKSPACE_ID (for realtime voice)
 bun install
 bun run dev:server         # :8787
-bun run dev:web            # :5173
+bun run dev:web            # :5173 (or next free port)
 ```
+
+Realtime voice needs `BAILIAN_WORKSPACE_ID` (get it via `bl auth login --console --console-site domestic` then `bl workspace list`) — the feature gracefully disables itself if unset. The Tripo 3D figurine bonus needs the Tripo product activated once in the Bailian console model marketplace (`/cn-beijing/?tab=model#/model-market/all`).
 
 ## Quality gates
 

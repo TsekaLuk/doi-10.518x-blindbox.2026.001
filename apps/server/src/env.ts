@@ -15,7 +15,7 @@ export const env = {
     models: {
       default: req("AI_MODEL_DEFAULT", "qwen3.7-plus"),
       vision: req("AI_MODEL_VISION", "qwen-vl-max"),
-      image: req("AI_MODEL_IMAGE", "qwen-image-2.0"),
+      image: req("AI_MODEL_IMAGE", "wan2.7-image-pro"),
       fast: req("AI_MODEL_FAST", "qwen3.6-flash"),
       tts: req("AI_MODEL_TTS", "cosyvoice-v3-flash"),
       realtime: req("AI_MODEL_REALTIME", "qwen3.5-omni-plus-realtime"),

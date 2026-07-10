@@ -4,26 +4,58 @@ import { z } from "zod";
  * 人格盲盒 (Persona Blind Box) — theoretical substrate.
  *
  * Every pull is combinatorially generated, never repeated (fixes SBTI/MBTI's
- * staleness), but is NOT free-floating LLM vibes — it's assembled from five
- * layers, each anchored to an established (or at minimum internally
- * consistent, citable) framework, the way tarot/astrology/MBTI endure
- * because they're *systems*, not one-shot generations:
+ * staleness), but is NOT free-floating LLM vibes — it's assembled from six
+ * layers, each anchored to peer-reviewed or manual-codified literature (full
+ * citations in PERSONA_THEORY.md at the repo root), the way tarot/astrology/
+ * MBTI endure because they're *systems*, not one-shot generations:
  *
- * 1. Attachment Style (Bowlby & Ainsworth) — fixed 4-type academic taxonomy;
- *    also already live self-ID vocabulary on Xiaohongshu ("我是焦虑型依恋").
- * 2. Defense Mechanism (Vaillant's maturity hierarchy, psychodynamic) — maturity
- *    tier doubles as rarity: mature defenses are, per the theory itself,
- *    rarer than primitive ones, so "rarity" isn't an arbitrary gacha roll.
- * 3. Persona / Shadow (Jung) — every pull states both the outward mask and
- *    the repressed shadow, directly the theory the word "persona" comes from.
+ * 0. Big Five / OCEAN (Costa & McCrae 1992; Goldberg 1990) — the empirical
+ *    backbone. We deliberately did NOT base generation on MBTI itself: its
+ *    test-retest reliability and structural validity are contested (Pittenger
+ *    1993; McCrae & Costa 1989 reinterpret it through the Big Five instead).
+ *    The "code" field keeps MBTI's letters as a *legible skin* only — the
+ *    actual inference underneath is Big Five.
+ * 1. Attachment Style (Bartholomew & Horowitz 1991's 4-category adult model,
+ *    built on Bowlby 1969/Ainsworth 1978) — fixed academic taxonomy that's
+ *    also live self-ID vocabulary on Xiaohongshu ("我是焦虑型依恋"). Must be
+ *    consistent with layer 0 per Noftle & Shaver (2006)'s documented Big
+ *    Five <-> attachment correlations (e.g. high N + low E correlates with
+ *    anxious attachment) — layers argue with each other, not float free.
+ * 2. Defense Mechanism (Vaillant 1977/1992; DSM-IV-TR Appendix B Defensive
+ *    Functioning Scale) — maturity tier doubles as rarity: mature defenses
+ *    are, per the theory itself, statistically rarer than primitive ones,
+ *    so "rarity" isn't an arbitrary gacha roll.
+ * 3. Persona / Shadow (Jung 1951 Aion; Jung 1953 Two Essays) — every pull
+ *    states both the outward mask and the repressed shadow, directly the
+ *    theory the word "persona" comes from.
  * 4. Archetype — drawn from a fixed pool sourced from 2026 Xiaohongshu trend
  *    research (发疯文学/浓人淡人/班味/反精致/city系…), not invented per-call.
- * 5. Palette — derived FROM layers 1-4 (attachment -> hue, defense maturity
+ * 5. Palette — derived FROM layers 0-4 (attachment -> hue, defense maturity
  *    -> saturation/value, archetype -> accent), not picked freehand.
  *
  * name/tagline/roast/imagePrompt are the creative surface on top; they must
  * be traceable back to the structured layers, not stand alone.
  */
+
+/** Big Five / OCEAN — Costa & McCrae (1992); Goldberg (1990). Qualitative 3-band read, not a psychometric score. */
+export const BIG_FIVE_TRAITS = [
+  "开放性",
+  "尽责性",
+  "外向性",
+  "宜人性",
+  "情绪稳定性",
+] as const;
+export type BigFiveTrait = (typeof BIG_FIVE_TRAITS)[number];
+export const TRAIT_LEVELS = ["高", "中", "低"] as const;
+export type TraitLevel = (typeof TRAIT_LEVELS)[number];
+export const BigFiveSchema = z.object({
+  开放性: z.enum(TRAIT_LEVELS),
+  尽责性: z.enum(TRAIT_LEVELS),
+  外向性: z.enum(TRAIT_LEVELS),
+  宜人性: z.enum(TRAIT_LEVELS),
+  情绪稳定性: z.enum(TRAIT_LEVELS),
+});
+export type BigFive = z.infer<typeof BigFiveSchema>;
 
 export const ATTACHMENT_STYLES = ["安全型", "焦虑型", "回避型", "混乱型"] as const;
 export type AttachmentStyle = (typeof ATTACHMENT_STYLES)[number];
@@ -82,7 +114,9 @@ export const PersonaSchema = z.object({
   /** English prompt for image generation: composition/color/material/style, ~50 words. */
   imagePrompt: z.string().min(1).max(600),
 
-  /** Layer 1 — Bowlby & Ainsworth. */
+  /** Layer 0 — Big Five/OCEAN qualitative read; the empirical backbone under the MBTI-shaped "code". */
+  bigFive: BigFiveSchema,
+  /** Layer 1 — Bartholomew & Horowitz (1991) 4-category adult attachment model. */
   attachmentStyle: z.enum(ATTACHMENT_STYLES),
   /** Layer 2 — Vaillant's hierarchy; must be one of ALL_DEFENSE_MECHANISMS. */
   defenseMechanism: z.string(),

@@ -1,0 +1,858 @@
+/* Paper-layout presentation layer — GSAP design language (see packages/design-system/DESIGN.md),
+   flipped to a LIGHT "real paper" theme: warm near-white field, just-black ink.
+   Editorial classes only; interactive primitives stay Astryx. Consumes --vibe-* brand tokens. */
+
+:root {
+  /* Semantic light-theme roles (derived from the brand tokens, kept local to the paper skin). */
+  --paper-ink: var(--vibe-color-just-black); /* body/heading text */
+  --paper-ink-muted: #6b6c60; /* secondary text — warm gray, ≥4.5:1 (WCAG AA) on #fffef5 cream */
+  --paper-hairline: rgba(14, 16, 15, 0.16); /* dividers/borders on light */
+  --paper-surface: #fffef5; /* page base (matches the shader's uBase) */
+  --paper-panel: rgba(255, 254, 245, 0.78); /* translucent panels over the shader */
+  --paper-panel-solid: #f6f3e2; /* footer / nested solid panel */
+  --paper-green-deep: #078e3a; /* brand green deepened for text on light */
+}
+
+.paper-doc {
+  position: relative;
+  z-index: 10;
+  color: var(--paper-ink);
+  transition: opacity 0.5s ease;
+}
+
+.paper-col {
+  max-width: var(--vibe-page-max-width);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 48px);
+}
+
+/* ── Announcement banner ─────────────────────────────────────────── */
+.paper-banner {
+  text-align: center;
+  font-size: var(--vibe-text-caption);
+  line-height: var(--vibe-leading-caption);
+  letter-spacing: var(--vibe-tracking-caption);
+  color: var(--paper-ink);
+  padding: 12px 16px;
+}
+.paper-banner a,
+.paper-banner .paper-banner-accent {
+  color: var(--paper-green-deep);
+}
+
+/* ── Hero (paper title) ──────────────────────────────────────────── */
+.paper-display {
+  font-weight: var(--vibe-font-weight-semibold);
+  font-size: clamp(64px, 16vw, 224px);
+  line-height: var(--vibe-leading-display);
+  letter-spacing: -0.02em;
+  color: var(--paper-ink);
+}
+.paper-subtitle {
+  font-weight: var(--vibe-font-weight-regular);
+  font-size: clamp(21px, 3vw, 34px);
+  line-height: var(--vibe-leading-subheading);
+  letter-spacing: -0.011em;
+  color: var(--paper-ink);
+}
+.paper-meta {
+  font-size: var(--vibe-text-body-sm);
+  line-height: 1.5;
+  color: var(--paper-ink-muted);
+}
+.paper-meta .paper-doi {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--vibe-text-caption);
+}
+
+/* ── Curly-bracket eyebrow + section headings ────────────────────── */
+.paper-eyebrow {
+  font-size: var(--vibe-text-body);
+  line-height: var(--vibe-leading-body);
+  font-weight: var(--vibe-font-weight-regular);
+  color: var(--paper-ink);
+}
+.paper-section-heading {
+  font-weight: var(--vibe-font-weight-semibold);
+  font-size: clamp(32px, 5vw, 66px);
+  line-height: var(--vibe-leading-heading);
+  letter-spacing: -0.011em;
+  color: var(--paper-ink);
+}
+.paper-body {
+  font-size: var(--vibe-text-body-lg);
+  line-height: var(--vibe-leading-body-lg);
+  letter-spacing: var(--vibe-tracking-body-lg);
+  color: var(--paper-ink);
+}
+.paper-muted {
+  color: var(--paper-ink-muted);
+}
+
+/* Full-width hairline divider that "draws" in via scaleX. */
+.paper-hairline {
+  height: 1px;
+  width: 100%;
+  background: var(--paper-hairline);
+  transform-origin: left center;
+}
+
+/* ── Ghost pill / gradient CTA pill (DESIGN.md button system) ────── */
+.paper-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--vibe-radius-buttons);
+  border: 1px solid var(--paper-ink);
+  background: transparent;
+  color: var(--paper-ink);
+  font-size: 18px;
+  font-weight: var(--vibe-font-weight-semibold);
+  line-height: 1.05;
+  padding: 15px 24px;
+  cursor: pointer;
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.paper-pill:hover {
+  background: rgba(14, 16, 15, 0.06);
+  border-color: rgba(14, 16, 15, 0.65);
+}
+.paper-pill:disabled {
+  color: var(--paper-ink-muted);
+  border-color: var(--paper-hairline);
+  background: transparent;
+  cursor: not-allowed;
+  opacity: 1;
+}
+.paper-pill--sm {
+  font-size: var(--vibe-text-body-sm);
+  padding: 10px 18px;
+}
+/* The single chromatic control: gradient-stroked CTA (green gradient border, ink text on paper). */
+.paper-pill--cta {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(rgba(255, 254, 245, 0.9), rgba(255, 254, 245, 0.9)) padding-box,
+    linear-gradient(114.41deg, #0ae448 20.74%, #abff84 65.5%) border-box;
+  color: var(--paper-ink);
+}
+.paper-pill--cta:hover {
+  border-color: transparent;
+  background:
+    linear-gradient(rgba(255, 254, 245, 0.72), rgba(255, 254, 245, 0.72)) padding-box,
+    linear-gradient(114.41deg, #0ae448 20.74%, #abff84 65.5%) border-box;
+}
+.paper-pill--cta:disabled {
+  border: 1px solid var(--paper-hairline);
+  background: transparent;
+  color: var(--paper-ink-muted);
+}
+
+/* Small ghost tag (keywords, chips) — pressable-looking on the light theme. */
+.paper-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--vibe-radius-pills);
+  border: 1px solid rgba(14, 16, 15, 0.24);
+  background: #fffdf6;
+  color: var(--paper-ink);
+  font-size: var(--vibe-text-body-sm);
+  line-height: 1.15;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.paper-tag:hover {
+  border-color: var(--paper-green-deep);
+  color: var(--paper-green-deep);
+  transform: translateY(-2px);
+}
+.paper-tag--active {
+  border-color: var(--paper-green-deep);
+  color: var(--paper-green-deep);
+  background: rgba(10, 228, 72, 0.10);
+}
+.paper-tag--static {
+  cursor: default;
+}
+.paper-tag--static:hover {
+  transform: none;
+  border-color: rgba(14, 16, 15, 0.24);
+  color: var(--paper-ink);
+}
+
+/* Scenario answer row — must OBVIOUSLY read as a pressable quiz option. */
+.paper-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  border: 1.5px solid rgba(14, 16, 15, 0.24);
+  border-radius: var(--vibe-radius-lg);
+  background: #fffdf4;
+  color: var(--paper-ink);
+  font-size: var(--vibe-text-body-sm);
+  line-height: 1.4;
+  padding: 15px 20px;
+  cursor: pointer;
+  transition:
+    border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.paper-option:hover {
+  border-color: var(--paper-green-deep);
+  background: rgba(10, 228, 72, 0.07);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(14, 16, 15, 0.08);
+}
+.paper-option:active {
+  transform: translateY(0);
+}
+.paper-option-letter {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(14, 16, 15, 0.24);
+  font-size: 13px;
+  font-weight: var(--vibe-font-weight-semibold);
+  color: var(--paper-ink-muted);
+  transition: inherit;
+}
+.paper-option-text {
+  flex: 1;
+  min-width: 0;
+}
+.paper-option-arrow {
+  flex-shrink: 0;
+  color: var(--paper-green-deep);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.paper-option:hover .paper-option-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+.paper-option:hover .paper-option-letter {
+  border-color: var(--paper-green-deep);
+  color: var(--paper-green-deep);
+}
+/* Brief tap-acknowledgement flash before auto-advancing. */
+.paper-option--chosen,
+.paper-option--chosen:hover {
+  border-color: var(--paper-green-deep);
+  background: rgba(10, 228, 72, 0.16);
+  transform: translateY(0);
+}
+.paper-option--chosen .paper-option-letter {
+  border-color: var(--paper-green-deep);
+  background: var(--paper-green-deep);
+  color: #fffef5;
+}
+
+/* ── In-text citations ───────────────────────────────────────────── */
+.paper-citation {
+  cursor: pointer;
+  font-size: 0.62em;
+  /* Raised via relative offset, NOT vertical-align: super — super grows the
+   * line box and caused uneven line heights / ugly mid-paragraph wraps. */
+  vertical-align: baseline;
+  position: relative;
+  top: -0.55em;
+  line-height: 0;
+  margin-inline: 1px;
+  color: var(--paper-ink-muted);
+  transition: color 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.paper-citation:hover {
+  color: var(--paper-green-deep);
+}
+
+/* Reference entries; .paper-ref--lit is toggled by citation hover. */
+.paper-ref {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  font-size: var(--vibe-text-body-sm);
+  line-height: 1.5;
+  color: var(--paper-ink-muted);
+  padding: 6px 8px;
+  border-radius: var(--vibe-radius-lg);
+  transform-origin: left center;
+  transition:
+    color 0.25s ease,
+    background-color 0.25s ease,
+    transform 0.25s ease;
+}
+.paper-ref--lit {
+  color: var(--paper-ink);
+  background: rgba(14, 16, 15, 0.05);
+  transform: scale(1.015);
+}
+
+/* Reference entries are real links: quiet at rest, layer-hued on hover. */
+.paper-ref-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+.paper-ref-link:hover {
+  color: var(--ref-hue, var(--paper-ink));
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--ref-hue, currentColor) 55%, transparent);
+}
+.paper-ref-ext {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 0.85em;
+  opacity: 0;
+  transform: translate(-2px, 2px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.paper-ref-link:hover .paper-ref-ext {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* ── 表 1 editorial table ────────────────────────────────────────── */
+.paper-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--vibe-text-body-sm);
+  line-height: 1.4;
+}
+.paper-table th,
+.paper-table td {
+  border-top: 1px solid var(--paper-hairline);
+  border-bottom: 1px solid var(--paper-hairline);
+  padding: 14px 12px;
+  text-align: left;
+  vertical-align: top;
+  color: var(--paper-ink);
+}
+.paper-table th {
+  color: var(--paper-ink-muted);
+  font-weight: var(--vibe-font-weight-regular);
+  white-space: nowrap;
+}
+.paper-figure-caption {
+  font-size: var(--vibe-text-caption);
+  line-height: var(--vibe-leading-caption);
+  color: var(--paper-ink-muted);
+  text-align: center;
+}
+
+/* Palette swatch cell (Layer 5). */
+.paper-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--paper-hairline);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* ── Unified prompt composer (type OR click-to-record voice) ─────── */
+.paper-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid var(--paper-hairline);
+  border-radius: 20px;
+  background: var(--paper-panel);
+  backdrop-filter: blur(6px);
+  padding: 12px 12px 12px 20px;
+  transition: border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.paper-composer:focus-within {
+  border-color: var(--paper-ink-muted);
+}
+.paper-composer textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--paper-ink);
+  font-size: var(--vibe-text-body-sm);
+  line-height: 1.5;
+  font-family: inherit;
+  padding: 8px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.paper-composer textarea::placeholder {
+  color: var(--paper-ink-muted);
+}
+/* Morphing action button: mic (empty) / send (has text) / stop (recording). */
+.paper-composer-action {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--paper-hairline);
+  background: transparent;
+  color: var(--paper-ink);
+  cursor: pointer;
+  transition:
+    border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.paper-composer-action:hover {
+  border-color: var(--paper-ink-muted);
+}
+.paper-composer-action:disabled {
+  color: var(--paper-ink-muted);
+  cursor: not-allowed;
+}
+.paper-composer-action--send {
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(rgba(255, 254, 245, 0.92), rgba(255, 254, 245, 0.92)) padding-box,
+    linear-gradient(114.41deg, #0ae448 20.74%, #abff84 65.5%) border-box;
+  color: var(--paper-green-deep);
+}
+.paper-composer-action--recording {
+  border-color: var(--paper-green-deep);
+  color: var(--paper-green-deep);
+}
+
+/* Inline recording state (replaces the textarea while recording). */
+.paper-recording {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 14px;
+  min-height: 40px;
+}
+.paper-recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e0312f;
+  animation: paper-rec-pulse 1.2s ease-in-out infinite;
+}
+@keyframes paper-rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+.paper-recording-timer {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--vibe-text-caption);
+  color: var(--paper-ink);
+  min-width: 44px;
+}
+.paper-recording-bars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  height: 24px;
+  overflow: hidden;
+}
+.paper-recording-bars span {
+  width: 2px;
+  border-radius: 1px;
+  background: var(--paper-ink-muted);
+  animation: paper-rec-bar 0.9s ease-in-out infinite alternate;
+}
+@keyframes paper-rec-bar {
+  from {
+    transform: scaleY(0.3);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.paper-recording-hint {
+  font-size: var(--vibe-text-caption);
+  color: var(--paper-ink-muted);
+  white-space: nowrap;
+}
+
+/* ── §1 instrument card — the quiz must instantly read as a quiz ──── */
+.paper-instrument {
+  width: 100%;
+  border: 1.5px solid rgba(14, 16, 15, 0.28);
+  border-radius: 16px;
+  background: rgba(255, 254, 248, 0.92);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 12px 40px rgba(14, 16, 15, 0.08);
+  overflow: hidden;
+}
+.paper-instrument-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--paper-hairline);
+  background: rgba(14, 16, 15, 0.035);
+}
+.paper-instrument-label {
+  font-size: var(--vibe-text-caption);
+  letter-spacing: 0.06em;
+  color: var(--paper-ink-muted);
+  white-space: nowrap;
+}
+.paper-instrument-body {
+  padding: clamp(20px, 3vw, 32px);
+}
+
+/* Question line inside the card — bigger/bolder than paper-body prose. */
+.paper-question {
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: var(--vibe-font-weight-semibold);
+  line-height: 1.3;
+  letter-spacing: -0.011em;
+  color: var(--paper-ink);
+}
+.paper-question-hint {
+  font-size: var(--vibe-text-caption);
+  color: var(--paper-ink-muted);
+}
+
+/* Numbered step indicators; completed steps are clickable (navigate back). */
+.paper-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--paper-hairline);
+  background: transparent;
+  color: var(--paper-ink-muted);
+  font-size: 13px;
+  font-weight: var(--vibe-font-weight-semibold);
+  cursor: default;
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+.paper-step--done {
+  border-color: var(--paper-green-deep);
+  color: var(--paper-green-deep);
+  cursor: pointer;
+}
+.paper-step--done:hover {
+  background: rgba(10, 228, 72, 0.12);
+}
+.paper-step--current {
+  border-color: var(--paper-green-deep);
+  background: var(--paper-green-deep);
+  color: #fffef5;
+}
+
+/* "— 或 —" separator between the instrument card and the free composer. */
+.paper-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--paper-ink-muted);
+  font-size: var(--vibe-text-caption);
+}
+.paper-or-divider::before,
+.paper-or-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--paper-hairline);
+}
+
+/* 量表 B — optional profile priors. */
+.paper-profile-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.paper-profile-label {
+  font-size: var(--vibe-text-body-sm);
+  font-weight: var(--vibe-font-weight-semibold);
+  color: var(--paper-ink);
+}
+.paper-tag--letter {
+  min-width: 40px;
+  justify-content: center;
+  padding: 9px 0;
+  font-weight: var(--vibe-font-weight-semibold);
+}
+.paper-profile-input {
+  width: 100%;
+  max-width: 360px;
+  border: 1px solid var(--paper-hairline);
+  border-radius: var(--vibe-radius-lg);
+  background: #fffdf4;
+  color: var(--paper-ink);
+  font-size: var(--vibe-text-body-sm);
+  font-family: inherit;
+  line-height: 1.4;
+  padding: 11px 16px;
+  outline: none;
+  transition: border-color 0.25s ease;
+}
+.paper-profile-input:focus {
+  border-color: var(--paper-ink-muted);
+}
+.paper-profile-input::placeholder {
+  color: var(--paper-ink-muted);
+}
+
+/* MBTI type-card grid — 16 recognizable character avatars (16personalities
+ * artwork), single-select, same toggle affordances as .paper-tag. */
+.paper-mbti-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+  max-width: 640px;
+}
+.paper-mbti-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  border: 1.5px solid rgba(14, 16, 15, 0.24);
+  border-radius: var(--vibe-radius-lg);
+  background: #fffdf4;
+  color: var(--paper-ink);
+  cursor: pointer;
+  transition:
+    border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.paper-mbti-card:hover {
+  border-color: var(--paper-green-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(14, 16, 15, 0.08);
+}
+.paper-mbti-card--active {
+  border-color: var(--paper-green-deep);
+  background: rgba(10, 228, 72, 0.1);
+}
+.paper-mbti-card-icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  pointer-events: none;
+}
+.paper-mbti-card-letter {
+  font-size: var(--vibe-text-body-sm);
+  font-weight: var(--vibe-font-weight-semibold);
+  line-height: 1.1;
+}
+.paper-mbti-card--active .paper-mbti-card-letter {
+  color: var(--paper-green-deep);
+}
+.paper-mbti-card-label {
+  font-size: var(--vibe-text-caption);
+  color: var(--paper-ink-muted);
+  line-height: 1.1;
+}
+
+/* ── Footer (references) ─────────────────────────────────────────── */
+.paper-footer {
+  background: var(--paper-panel-solid);
+  border-top: 1px solid var(--paper-hairline);
+  padding-block: 64px 48px;
+  margin-top: var(--vibe-section-gap);
+}
+.paper-colophon {
+  font-size: var(--vibe-text-caption);
+  color: var(--paper-ink-muted);
+  text-align: center;
+  padding-top: 40px;
+}
+
+/* ── Mesh-gradient page background (pure CSS — no WebGL, no shimmer) ── */
+.mesh-bg {
+  /* z-index 0, not negative: a negative index paints behind the body's own
+   * background fill; the document content sits above at z-10 (.paper-doc). */
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: #fffef5;
+  overflow: hidden;
+  pointer-events: none;
+}
+.mesh-bg-blob {
+  position: absolute;
+  width: 62vmax;
+  height: 62vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  will-change: transform;
+}
+.mesh-bg-blob--pink {
+  background: radial-gradient(circle, #fec5fb 0%, transparent 62%);
+  top: -18%;
+  left: -14%;
+  animation: mesh-drift-a 47s ease-in-out infinite alternate;
+}
+.mesh-bg-blob--lilac {
+  background: radial-gradient(circle, #c5c0ff 0%, transparent 62%);
+  top: 32%;
+  right: -20%;
+  animation: mesh-drift-b 59s ease-in-out infinite alternate;
+}
+.mesh-bg-blob--blue {
+  background: radial-gradient(circle, #aee9f5 0%, transparent 62%);
+  bottom: -22%;
+  left: 8%;
+  animation: mesh-drift-c 53s ease-in-out infinite alternate;
+}
+.mesh-bg-blob--green {
+  background: radial-gradient(circle, #cdf5b5 0%, transparent 62%);
+  top: 4%;
+  right: 18%;
+  animation: mesh-drift-b 41s ease-in-out infinite alternate-reverse;
+}
+.mesh-bg-blob--orange {
+  background: radial-gradient(circle, #ffe3bd 0%, transparent 62%);
+  bottom: 6%;
+  right: 34%;
+  opacity: 0.4;
+  animation: mesh-drift-a 67s ease-in-out infinite alternate-reverse;
+}
+@keyframes mesh-drift-a {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(9vmax, 6vmax) scale(1.12); }
+}
+@keyframes mesh-drift-b {
+  from { transform: translate(0, 0) scale(1.08); }
+  to { transform: translate(-8vmax, -5vmax) scale(0.95); }
+}
+@keyframes mesh-drift-c {
+  from { transform: translate(0, 0) scale(0.96); }
+  to { transform: translate(6vmax, -7vmax) scale(1.1); }
+}
+/* ── 无障碍:统一的键盘焦点态 ─────────────────────────────────────── */
+/* 所有可交互的 paper-* 控件共享同一套 :focus-visible 描边(品牌深绿),
+ * 只在键盘导航时出现,不影响鼠标点击的视觉。 */
+.paper-tag:focus-visible,
+.paper-pill:focus-visible,
+.paper-option:focus-visible,
+.paper-step:focus-visible,
+.paper-mbti-card:focus-visible,
+.paper-composer-action:focus-visible,
+.paper-citation:focus-visible,
+.paper-profile-input:focus-visible {
+  outline: 2px solid var(--paper-green-deep);
+  outline-offset: 2px;
+}
+/* composer 内的 textarea 自身 outline:none,焦点态由容器边框表达;
+ * 键盘用户也给容器一个可见描边。 */
+.paper-composer:focus-within {
+  outline: 2px solid var(--paper-green-deep);
+  outline-offset: 2px;
+}
+
+/* ── 移动端:表格横向溢出安全处理 ─────────────────────────────────── */
+/* th 是 white-space: nowrap,375px 宽度下必然溢出;把 table 本身变成
+ * 可横向滚动的块,页面主体不出现横向滚动条(不需要改 TSX 包裹容器)。 */
+@media (max-width: 640px) {
+  .paper-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── 窄屏(≤480px)调优 ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* 16vw 在 375px ≈ 60px,但中文标题逐字宽,64px 下限会挤出难看的
+   * 换行;下调 min 并收紧上限,让标题在小屏上按 vw 自然缩放。 */
+  .paper-display {
+    font-size: clamp(44px, 14.5vw, 64px);
+  }
+  /* 量表卡片内边距收紧,把宝贵的横向空间留给题干和选项。 */
+  .paper-instrument-header {
+    padding: 12px 16px;
+  }
+  .paper-instrument-body {
+    padding: 16px;
+  }
+  /* 选项行:字号/内边距适配单手触屏(保持 ≥44px 触达高度)。 */
+  .paper-option {
+    gap: 10px;
+    padding: 13px 14px;
+    font-size: 14px;
+  }
+  .paper-composer {
+    padding: 10px 10px 10px 14px;
+  }
+  /* 背景 blob:窄屏 GPU 弱,减小模糊半径并隐藏两个次要 blob 省性能。 */
+  .mesh-bg-blob {
+    filter: blur(56px);
+  }
+  .mesh-bg-blob--green,
+  .mesh-bg-blob--orange {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh-bg-blob {
+    animation: none;
+  }
+  /* 录音脉冲/声浪条也降级为静态(保留红点与条形的静止形态即可传达状态)。 */
+  .paper-recording-dot,
+  .paper-recording-bars span {
+    animation: none;
+  }
+  /* 交互卡片的位移类过渡取消,避免 hover 抖动。 */
+  .paper-tag,
+  .paper-option,
+  .paper-mbti-card,
+  .paper-ref {
+    transition-duration: 0.01ms;
+  }
+  .paper-tag:hover,
+  .paper-option:hover,
+  .paper-mbti-card:hover {
+    transform: none;
+  }
+}

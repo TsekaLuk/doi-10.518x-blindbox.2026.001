@@ -10,15 +10,21 @@
 @import "@vibe/design-system/astryx.css";
 @import "@vibe/design-system/tailwind.css";
 
+/* Paper-layout presentation classes (editorial document skin) */
+@import "../paper/paper.css";
+
 html,
 body,
 #root {
-  height: 100%;
+  /* The paper document scrolls; the 3D canvas is position:fixed behind it. */
+  min-height: 100%;
 }
 
 body {
-  background: var(--color-background-body);
-  color: var(--color-text-primary);
+  /* Light paper theme: the dark --color-background-body token would leave
+   * near-black ink text invisible; the page canvas is warm paper. */
+  background: #fffef5;
+  color: #0e100f;
   font-family: var(--font-family-body);
   line-height: var(--vibe-leading-body);
 }

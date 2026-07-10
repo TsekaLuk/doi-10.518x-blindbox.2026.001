@@ -1,9 +1,10 @@
-import { Environment, OrbitControls } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Environment } from "@react-three/drei";
+import { Canvas, useFrame } from "@react-three/fiber";
 import type { Geometry, Material, SceneGraph, SceneNode } from "@vibe/scene";
-import { useCallback } from "react";
-import type * as THREE from "three";
+import { useCallback, useMemo, useRef } from "react";
+import * as THREE from "three";
 import { registerNode } from "./registry";
+import { getShader } from "./shaders";
 
 /**
  * Three.js is only a renderer: this component is a pure function of the
@@ -29,6 +30,52 @@ function GeometryEl({ g }: { g: Geometry }) {
   }
 }
 
+/** Uniform value in a form <shaderMaterial uniforms={...}> accepts: `{ value }`. */
+type UniformEntry = { value: number | THREE.Vector3 | THREE.Color | string };
+
+function toUniforms(shaderId: string | undefined, overrides: Material["uniforms"]): Record<string, UniformEntry> {
+  const shader = getShader(shaderId);
+  const raw = { ...shader.defaultUniforms, ...(overrides ?? {}) };
+  const out: Record<string, UniformEntry> = { uTime: { value: 0 } };
+  for (const [key, val] of Object.entries(raw)) {
+    const isColor = key.toLowerCase().includes("color");
+    if (Array.isArray(val)) {
+      out[key] = isColor ? { value: new THREE.Color(val[0], val[1], val[2]) } : { value: new THREE.Vector3(...val) };
+    } else if (typeof val === "number") {
+      out[key] = { value: val };
+    } else {
+      out[key] = isColor ? { value: new THREE.Color(val) } : { value: val };
+    }
+  }
+  return out;
+}
+
+/** "shader" material: resolves shaderId through the shader registry (./shaders) and
+ * drives a uTime uniform every frame — the live-animated background case. */
+function ShaderMaterialEl({ m }: { m: Material }) {
+  const shader = getShader(m.shaderId);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const uniforms = useMemo(() => toUniforms(m.shaderId, m.uniforms), [m.shaderId, m.uniforms]);
+
+  useFrame((state) => {
+    const uTime = materialRef.current?.uniforms.uTime;
+    if (uTime) uTime.value = state.clock.elapsedTime;
+  });
+
+  return (
+    <shaderMaterial
+      ref={materialRef}
+      vertexShader={shader.vertexShader}
+      fragmentShader={shader.fragmentShader}
+      uniforms={uniforms}
+      transparent={m.opacity < 1}
+      opacity={m.opacity}
+      wireframe={m.wireframe}
+      depthWrite={false}
+    />
+  );
+}
+
 function MaterialEl({ m }: { m: Material }) {
   const common = {
     color: m.color,
@@ -48,7 +95,8 @@ function MaterialEl({ m }: { m: Material }) {
           emissive={m.emissive ?? "#000000"}
         />
       );
-    // "shader" resolves through the shader registry (src/scene/shaders) — reserved.
+    case "shader":
+      return <ShaderMaterialEl m={m} />;
     default:
       return (
         <meshStandardMaterial
@@ -107,7 +155,9 @@ export function SceneRenderer({ scene }: { scene: SceneGraph }) {
       {scene.nodes.map((n) => (
         <Node key={n.id} node={n} />
       ))}
-      <OrbitControls makeDefault target={scene.camera.lookAt} />
+      {/* No OrbitControls: the canvas is a fixed backdrop behind a scrollable
+          paper document — grab-rotating it mid-scroll would be a bug, and the
+          blind-box burst is choreographed for the default camera framing. */}
     </Canvas>
   );
 }

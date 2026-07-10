@@ -4,6 +4,7 @@ export const API_ROUTES = {
   aiStream: "/api/ai/stream",
   aiImage: "/api/ai/image",
   aiTts: "/api/ai/tts",
+  aiAsr: "/api/ai/asr",
   aiRealtime: "/api/ai/realtime",
   ai3d: "/api/ai/3d",
   health: "/health",
