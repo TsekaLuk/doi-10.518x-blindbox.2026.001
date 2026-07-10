@@ -20,6 +20,7 @@ import {
 } from "../paper/PaperChrome";
 import { PaperAbstract, PaperHero, scrollToSection } from "../paper/PaperHero";
 import { downloadCanvasAsPng, drawResultCard } from "../persona/resultCard";
+import { publicAsset } from "../publicAsset";
 import { useRealtimeVoice } from "../realtime/useRealtimeVoice";
 import { buildBlindBoxDocument } from "../scene/blindbox";
 import { useVibeStore } from "../state/store";
@@ -1388,7 +1389,7 @@ function ProfileStep(props: { profile: ProfileInfo; onChange: (p: ProfileInfo) =
             >
               {/* Avatar artwork from 16personalities.com (see MBTI_TYPES comment). */}
               <img
-                src={`/mbti16/${t.code}.svg`}
+                src={publicAsset(`/mbti16/${t.code}.svg`)}
                 alt=""
                 aria-hidden
                 loading="lazy"
@@ -1475,7 +1476,7 @@ function ProfileStep(props: { profile: ProfileInfo; onChange: (p: ProfileInfo) =
                 className={`paper-mbti-card ${active ? "paper-mbti-card--active" : ""}`}
               >
                 <img
-                  src={`/sbti/${t.img}`}
+                  src={publicAsset(`/sbti/${t.img}`)}
                   alt=""
                   aria-hidden
                   loading="lazy"
@@ -2036,7 +2037,7 @@ function PortraitSkeleton(props: { startedAt: number | null }) {
         由
         {/* Qwen mark (transparent SVG) from lobehub/lobe-icons (packages/static-svg). */}
         <img
-          src="/brand/qwen-color.svg"
+          src={publicAsset("/brand/qwen-color.svg")}
           alt="通义千问"
           loading="lazy"
           className="inline-block h-3.5 w-auto align-middle"

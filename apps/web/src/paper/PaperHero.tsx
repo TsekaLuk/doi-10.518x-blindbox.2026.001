@@ -4,6 +4,7 @@ import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { SplitText } from "gsap/SplitText";
 import { useRef } from "react";
+import { publicAsset } from "../publicAsset";
 import { LAYER_COLORS } from "./citations";
 import { CitationSup } from "./PaperChrome";
 
@@ -76,7 +77,7 @@ export function PaperHero() {
           你<sup>1, *, †</sup> ×{" "}
           {/* Qwen mark (transparent SVG) from lobehub/lobe-icons (packages/static-svg). */}
           <img
-            src="/brand/qwen-color.svg"
+            src={publicAsset("/brand/qwen-color.svg")}
             alt="通义千问"
             loading="lazy"
             className="inline-block h-4 w-auto align-middle"

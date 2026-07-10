@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useEffect, useRef, useState } from "react";
+import { publicAsset } from "../publicAsset";
 import { LAYER_COLORS, REFERENCES, type LayerKey } from "./citations";
 
 gsap.registerPlugin(ScrollToPlugin, ScrollTrigger);
@@ -245,7 +246,7 @@ export function References() {
             本文由 vibe coding 完成 · Powered by 阿里云百炼
             {/* Qwen mark (transparent SVG) from lobehub/lobe-icons (packages/static-svg). */}
             <img
-              src="/brand/qwen-color.svg"
+              src={publicAsset("/brand/qwen-color.svg")}
               alt="通义千问"
               loading="lazy"
               className="inline-block h-4 w-auto align-middle"
