@@ -43,6 +43,13 @@ app.post(API_ROUTES.aiStream, async (c) => {
     thinkingBudget?: number;
   };
   return streamSSE(c, async (stream) => {
+    // Heartbeat: with enable_thinking the upstream emits only reasoning_content
+    // (filtered out below) for up to a couple of minutes, so zero bytes reach
+    // the client and Bun's idleTimeout (120s) kills the connection mid-think.
+    // SSE comments keep the pipe warm without polluting the event protocol.
+    const heartbeat = setInterval(() => {
+      void stream.write(": ping\n\n").catch(() => {});
+    }, 15000);
     try {
       const upstream = await upstreamChatStream({ ...body, signal: c.req.raw.signal });
       for await (const text of extractDeltas(upstream)) {
@@ -54,6 +61,8 @@ app.post(API_ROUTES.aiStream, async (c) => {
         event: "error",
         data: JSON.stringify({ error: err instanceof Error ? err.message : "upstream error" }),
       });
+    } finally {
+      clearInterval(heartbeat);
     }
   });
 });
