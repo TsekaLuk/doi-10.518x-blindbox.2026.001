@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: persona-blindbox-server
+  labels:
+    app.kubernetes.io/name: persona-blindbox-server
+spec:
+  selector:
+    app.kubernetes.io/name: persona-blindbox-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP

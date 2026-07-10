@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: persona-blindbox-server-config
+  labels:
+    app.kubernetes.io/name: persona-blindbox-server
+data:
+  PORT: "8787"
+  AI_BASE_URL: https://dashscope.aliyuncs.com/compatible-mode/v1
+  AI_MODEL_DEFAULT: qwen3.7-plus
+  AI_MODEL_VISION: qwen-vl-max
+  AI_MODEL_FAST: qwen3.6-flash
+  AI_MODEL_IMAGE: wan2.7-image-pro
+  AI_MODEL_TTS: cosyvoice-v3-flash
+  AI_MODEL_REALTIME: qwen3.5-omni-plus-realtime
+  AI_MODEL_3D: Tripo-P1.0

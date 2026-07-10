@@ -9,3 +9,5 @@ coverage/
 *.log
 *.tsbuildinfo
 .turbo/
+deploy/k8s/overlays/*/secrets.env
+.vercel

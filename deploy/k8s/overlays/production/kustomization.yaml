@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: persona-blindbox
+resources:
+  - ../../base
+  - ingress.yaml
+images:
+  - name: persona-blindbox-server
+    newName: ghcr.io/tsekaluk/doi-10.518x-blindbox.2026.001-server
+    newTag: latest
+secretGenerator:
+  - name: persona-blindbox-runtime
+    envs:
+      - secrets.env
+generatorOptions:
+  disableNameSuffixHash: true

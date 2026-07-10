@@ -1,0 +1,10 @@
+.env
+.env.*
+apps/*/.env
+apps/*/.env.*
+deploy/k8s/overlays/*/secrets.env
+node_modules
+apps/*/dist
+dist
+coverage
+*.log
