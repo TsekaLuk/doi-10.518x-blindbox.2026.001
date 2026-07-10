@@ -56,13 +56,18 @@ async function fetchPersonaPortrait(prompt: string): Promise<ImageResult> {
 }
 
 /**
- * 情境题题库 — 12 道，各探一个不同的心理信号维度（标注在 signal 字段，
- * 供维护者对照六层理论；不展示给用户、不进 prompt）。每次拆盒随机抽
- * SCENARIO_SAMPLE_COUNT 道：节奏仍是"啪啪啪点几下"，但"再抽一次"会
- * 遇到新题，重玩不腻，AI 拿到的行为信号也更多样。
+ * 情境题题库 — 48 道，按六大生活域（family）体系化分布、每域 8 道，
+ * 每道再各探一个心理信号维度（signal 字段，供维护者对照六层理论；
+ * family/signal 均不展示给用户、不进 prompt）。每次拆盒做"跨域分层
+ * 抽样"：随机选 3 个不同生活域、每域抽 1 道——节奏仍是"啪啪啪点几下"，
+ * 但信号覆盖面有结构保证，"再抽一次"必遇新组合。
+ * 文案标准：具体到生活细节，让人"hhh 太有生活了"。
  */
+type ScenarioFamily = "职场生存" | "线上社交" | "关系边界" | "独处情绪" | "消费欲望" | "失控意外";
+
 interface ScenarioQuestion {
   scenario: string;
+  family: ScenarioFamily;
   /** 该题主要探测的信号维度（内部注记）。 */
   signal: string;
   question: string;
@@ -70,8 +75,10 @@ interface ScenarioQuestion {
 }
 
 const SCENARIO_POOL: ScenarioQuestion[] = [
+  // ── 职场生存 ──────────────────────────────────────────────
   {
     scenario: "摸鱼被抓包",
+    family: "职场生存",
     signal: "冲动控制/自我呈现",
     question: "老板突然走到你工位后面，而你屏幕上开着的是购物车。你的反应是：",
     options: [
@@ -83,6 +90,7 @@ const SCENARIO_POOL: ScenarioQuestion[] = [
   },
   {
     scenario: "DDL前夜",
+    family: "职场生存",
     signal: "压力应对",
     question: "DDL前一晚，东西还没做完，你的状态是：",
     options: [
@@ -93,18 +101,81 @@ const SCENARIO_POOL: ScenarioQuestion[] = [
     ],
   },
   {
-    scenario: "被阴阳怪气",
-    signal: "冲突反应",
-    question: "有人阴阳怪气地内涵你，你通常会：",
+    scenario: "电梯遇老板",
+    family: "职场生存",
+    signal: "社交面具/权威关系",
+    question: "电梯里只有你和大老板，还有三十层，你会：",
     options: [
-      "假装没听懂，礼貌微笑，内心已经拉黑",
-      "当场怼回去，绝不吃这个亏",
-      "回家越想越气，写一整篇小作文但没有发出去",
-      "转头就忘，过会儿该笑笑该吃吃",
+      "主动没话找话，气氛尬但我先动手",
+      "全程盯手机假装处理要事，手心出汗",
+      "点头微笑后安静站着，沉默也是一种体面",
+      "趁机汇报一句最近的成果，机会都是挤出来的",
     ],
   },
   {
+    scenario: "被cue即兴发言",
+    family: "职场生存",
+    signal: "临场应激/表演型应对",
+    question: "会上领导突然说「这块你来讲讲」，而你刚才在走神。你会：",
+    options: [
+      "把最后听到的半句话复述一遍再总结升华，脸不红心不跳",
+      "直接坦白「不好意思刚刚没跟上」，宁可尴尬不装",
+      "缓慢重复一遍问题拖时间，大脑同步飞速检索",
+      "看向队友疯狂使眼色，团队的事团队扛",
+    ],
+  },
+  {
+    scenario: "周报文学",
+    family: "职场生存",
+    signal: "印象管理/语言包装",
+    question: "到了写周报的时候，你发现这周主要在摸鱼。你会：",
+    options: [
+      "把一件小事拆成三行，动词全部升维：推进、对齐、赋能",
+      "如实写，爱咋咋地，我的产出对得起工资",
+      "翻同事的周报参考格式，顺便焦虑十分钟",
+      "拖到周五23:59，用五分钟总结这一周的人生",
+    ],
+  },
+  {
+    scenario: "下班临界点",
+    family: "职场生存",
+    signal: "从众压力/自主性",
+    question: "18:00 到了，活干完了，但办公室没有一个人动。你会：",
+    options: [
+      "收拾东西直接走，下班是我的合法权利",
+      "再坐二十分钟假装收尾，等第一个人动",
+      "看领导脸色行事，领导不走我不走",
+      "反正也走不了，索性点个外卖继续卷",
+    ],
+  },
+  {
+    scenario: "锅从天上来",
+    family: "职场生存",
+    signal: "自我保护/冲突策略",
+    question: "会上有口锅正在向你飞来，但其实是别人的问题。你会：",
+    options: [
+      "当场摆事实澄清，聊天记录截图早已备好",
+      "先扛下来稳住场面，私下再找当事人聊",
+      "会后给领导发一篇有理有据的小作文",
+      "忍了，但这位同事从此进入终身观察名单",
+    ],
+  },
+  {
+    scenario: "年会特等奖",
+    family: "职场生存",
+    signal: "期待管理/乐观倾向",
+    question: "年会抽奖，大屏幕滚动到最后一个特等奖。你会：",
+    options: [
+      "毫无波动，反正从来抽不到我",
+      "心跳加速，已经开始想中奖了发什么朋友圈",
+      "和旁边同事互相押注打赌，气氛组担当",
+      "早就提前溜了，年会不如回家",
+    ],
+  },
+  // ── 线上社交 ──────────────────────────────────────────────
+  {
     scenario: "消息已读不回",
+    family: "线上社交",
     signal: "依恋焦虑/社交解读",
     question: "重要的人已读你消息六小时没回，你在想：",
     options: [
@@ -115,7 +186,396 @@ const SCENARIO_POOL: ScenarioQuestion[] = [
     ],
   },
   {
+    scenario: "五条59秒语音",
+    family: "线上社交",
+    signal: "边界感/信息处理风格",
+    question: "点开对话框，对方发来连续五条59秒语音。你的内心：",
+    options: [
+      "全部转文字，一目十行——语音是对时间的抢劫",
+      "认真听完还倒回去重听一遍，怕漏了细节",
+      "先放着，等我攒够勇气再点开",
+      "直接回一句「打字说」，边界感拉满",
+    ],
+  },
+  {
+    scenario: "发疯朋友圈前夜",
+    family: "线上社交",
+    signal: "自我呈现/印象管理",
+    question: "想发一条带情绪的朋友圈，发送之前你会：",
+    options: [
+      "分组屏蔽同事和家人，精准运营一个自我",
+      "想发就发爱看不看，真实最大",
+      "编辑了十分钟，最后一个字也没发",
+      "发完十分钟没人点赞，默默删掉",
+    ],
+  },
+  {
+    scenario: "大群抢到最佳",
+    family: "线上社交",
+    signal: "群体压力/互惠焦虑",
+    question: "50人大群的拼手气红包，你抢到了最佳。你会：",
+    options: [
+      "秒发一个更大的回去，排面不能输",
+      "甩一个表情包哈哈哈混过去",
+      "默默截图当今日运势，一声不吭",
+      "开始紧张是不是该我接着发，压力瞬间上头",
+    ],
+  },
+  {
+    scenario: "对话聊死了",
+    family: "线上社交",
+    signal: "社交润滑/关系敏感度",
+    question: "聊天快聊死了，对方只回了一个「嗯」。你会：",
+    options: [
+      "甩一个表情包救场，表情包是社交润滑剂",
+      "就此打住，尬聊不如不聊",
+      "内心开始复盘是不是自己哪句说错了",
+      "直接问「你是不是不开心」，摊开来讲",
+    ],
+  },
+  {
+    scenario: "好评返现3块",
+    family: "线上社交",
+    signal: "原则感/微利益权衡",
+    question: "商品用着一般，客服追着你要好评返现3块。你会：",
+    options: [
+      "复制一段夸夸模板发过去，3块也是钱",
+      "不理，评价是我最后的倔强",
+      "写个中评，委婉但诚实",
+      "被烦到直接差评，压迫感换差评",
+    ],
+  },
+  {
+    scenario: "群接龙",
+    family: "线上社交",
+    signal: "群体从众/拒绝能力",
+    question: "群里发起聚餐接龙，已经15个人接了，你不太想去。你会：",
+    options: [
+      "装没看见，接龙里永远没有我",
+      "纠结到最后一刻，被@了才表态",
+      "接了，大家都接不好意思不接",
+      "直接回「我就不去了哈」，干脆利落",
+    ],
+  },
+  {
+    scenario: "合照闭眼张嘴",
+    family: "线上社交",
+    signal: "形象焦虑/幽默防御",
+    question: "朋友把合照发到群里，你在里面闭眼张嘴。你会：",
+    options: [
+      "秒发「删了重发」，配一个刀的表情包",
+      "抢先自嘲「这是我？」，主动权就是安全感",
+      "默默保存，报复的机会总会来的",
+      "无所谓，反正没人盯着我看",
+    ],
+  },
+  // ── 关系边界 ──────────────────────────────────────────────
+  {
+    scenario: "朋友借钱",
+    family: "关系边界",
+    signal: "边界感/宜人性",
+    question: "不算太熟的朋友开口借两千块，你会：",
+    options: [
+      "借，但心里默默把这钱当送出去了",
+      "直接说手头紧，拒绝得毫无心理负担",
+      "问清楚用途和还款时间，像个信贷经理",
+      "借一半，既表了心意又留了底线",
+    ],
+  },
+  {
+    scenario: "好友吐槽对象",
+    family: "关系边界",
+    signal: "共情方式/支持风格",
+    question: "好友深夜找你哭诉感情问题，你的支持方式是：",
+    options: [
+      "先骂对方一小时，情绪价值拉满",
+      "冷静分析利弊，附赠行动建议清单",
+      "不说话，就听着，偶尔递一句「我在」",
+      "讲一个自己更惨的故事，用对比疗法止痛",
+    ],
+  },
+  {
+    scenario: "爸妈电话三连",
+    family: "关系边界",
+    signal: "家庭关系/情绪劳动",
+    question: "爸妈打来电话，聊了三分钟开始进入正题（工作/对象/存款三连问），你会：",
+    options: [
+      "熟练切换汇报模式，报喜不报忧，一切尽在掌握",
+      "开始烦躁但忍住，嗯嗯啊啊快进到再见",
+      "直接开怼「又来了」，怼完又有点后悔",
+      "顺势诉苦一波，把压力反向输出回去",
+    ],
+  },
+  {
+    scenario: "纪念日被忘",
+    family: "关系边界",
+    signal: "委屈处理/记仇模式",
+    question: "重要的人忘了你的生日/纪念日，你会：",
+    options: [
+      "不说，但这件事从此有了编号，随时可以调取",
+      "当场发作，情绪价值必须当天结清",
+      "自嘲一句「没事我自己过得挺好」，心里五味杂陈",
+      "真的无所谓，日子是过给自己的",
+    ],
+  },
+  {
+    scenario: "十年未见的请帖",
+    family: "关系边界",
+    signal: "人情账本/社交义务",
+    question: "十年没联系的老同学突然发来婚礼请帖。你会：",
+    options: [
+      "礼到人不到，成年人的体面",
+      "装死不回，查无此人",
+      "真去，顺便当一场同学会打卡",
+      "纠结三天，最后去问共同好友「你去吗」",
+    ],
+  },
+  {
+    scenario: "室友不倒垃圾",
+    family: "关系边界",
+    signal: "共处冲突/表达方式",
+    question: "室友又没倒垃圾，这是本周第三次。你会：",
+    options: [
+      "直接说，规则就是规则",
+      "自己倒了，但敲键盘的声音变大了",
+      "发一条不点名的朋友圈内涵一下",
+      "在群里发「垃圾值日表」，制度解决一切",
+    ],
+  },
+  {
+    scenario: "前任的深夜问候",
+    family: "关系边界",
+    signal: "旧关系处理/情绪防御",
+    question: "前任深夜发来一句「最近好吗」。你会：",
+    options: [
+      "已读不回，让沉默替我发言",
+      "礼貌回「挺好的你呢」，滴水不漏",
+      "截图发给闺蜜/兄弟，召开紧急分析会",
+      "心跳漏一拍，然后把手机扣在桌上",
+    ],
+  },
+  {
+    scenario: "第三次被放鸽子",
+    family: "关系边界",
+    signal: "容忍阈值/关系降级",
+    question: "朋友第三次临时放你鸽子。你会：",
+    options: [
+      "笑着说没事，心里默默给友情降了一级",
+      "半开玩笑说「再鸽我们就绝交」，玩笑里带真话",
+      "下次组局自动跳过TA，用行动投票",
+      "无所谓，一个人吃火锅也挺好",
+    ],
+  },
+  // ── 独处情绪 ──────────────────────────────────────────────
+  {
+    scenario: "深夜emo",
+    family: "独处情绪",
+    signal: "情绪调节/阴影面",
+    question: "凌晨一点睡不着，情绪突然涌上来，你会：",
+    options: [
+      "打开备忘录写小作文，写完就删",
+      "找歌单里最丧的歌循环，主动emo到底",
+      "爬起来干点具体的事，把情绪饿死",
+      "翻通讯录想找人说话，翻到最后谁也没找",
+    ],
+  },
+  {
+    scenario: "完全自由的周末",
+    family: "独处情绪",
+    signal: "能量取向",
+    question: "一个没有任何安排的周末，你的理想过法：",
+    options: [
+      "关机躺平，人类勿近，充电中",
+      "约满两天的局，独处才是消耗",
+      "上午出门假装精致，下午回家瘫成液体",
+      "临时起意去一个没去过的地方，一个人也行",
+    ],
+  },
+  {
+    scenario: "体检报告出了",
+    family: "独处情绪",
+    signal: "健康焦虑/回避应对",
+    question: "体检App提示「您有3项指标异常」，你会：",
+    options: [
+      "秒点开逐项搜索，半小时后确诊自己「还能抢救」",
+      "不点，放着，不看就是没病",
+      "转发给学医的朋友，把焦虑外包出去",
+      "看完默默下单维生素和早睡闹钟，坚持了三天",
+    ],
+  },
+  {
+    scenario: "收藏夹吃灰",
+    family: "独处情绪",
+    signal: "自我期待/行动力",
+    question: "深夜刷到「十天学会剪视频」教程，你会：",
+    options: [
+      "收藏，和收藏夹里另外两百个教程作伴",
+      "当场跟练到凌晨三点，三分钟热度但热度惊人",
+      "转发给朋友说「我们一起学」，绑架式自律",
+      "划走——我很清楚自己不会学的，省得骗自己",
+    ],
+  },
+  {
+    scenario: "6:30的闹钟",
+    family: "独处情绪",
+    signal: "自律幻想/自我谈判",
+    question: "闹钟响了，你昨晚定的是 6:30 起床跑步。你会：",
+    options: [
+      "关掉，再睡九十分钟，梦里跑完了",
+      "真起，用起床气换多巴胺",
+      "躺着刷手机到 7:50，用「我醒着」安慰自己",
+      "把闹钟改到明天，永远有明天",
+    ],
+  },
+  {
+    scenario: "一个人吃饭",
+    family: "独处情绪",
+    signal: "独处自洽/他者意识",
+    question: "一个人在外面吃饭，你的状态是：",
+    options: [
+      "戴上耳机刷剧，自成结界",
+      "观察周围的人，脑内给每桌编故事",
+      "点完就低头玩手机，吃完就走，效率至上",
+      "有点不自在，总觉得别人在看我",
+    ],
+  },
+  {
+    scenario: "三年前的自拍",
+    family: "独处情绪",
+    signal: "自我连续性/怀旧模式",
+    question: "翻相册翻到三年前的自拍，你的第一反应：",
+    options: [
+      "当年真好看，时间是把杀猪刀",
+      "当年真丑，幸好我进化了",
+      "顺势开始翻聊天记录考古，一坐一晚上",
+      "面无表情关掉，过去的就让它过去",
+    ],
+  },
+  {
+    scenario: "生日这天",
+    family: "独处情绪",
+    signal: "被爱期待/自我关怀",
+    question: "自己生日这天，你倾向于：",
+    options: [
+      "提前一周预告，生日必须有排面",
+      "谁记得就跟谁过，不主动不强求",
+      "关掉生日提醒，把它过成普通一天",
+      "给自己买个大的，自己爱自己",
+    ],
+  },
+  // ── 消费欲望 ──────────────────────────────────────────────
+  {
+    scenario: "天降五百万",
+    family: "消费欲望",
+    signal: "欲望结构/价值取向",
+    question: "如果明天到账五百万，你的第一个动作是：",
+    options: [
+      "先存起来，生活照旧，谁也不告诉",
+      "当天辞职，机票买最近的一班",
+      "列一张报恩清单，把欠的人情都还了",
+      "研究怎么让它变成一千万",
+    ],
+  },
+  {
+    scenario: "退货运费8块",
+    family: "消费欲望",
+    signal: "沉没成本/决策风格",
+    question: "买的东西到手不喜欢，但退货要自己出8块运费，你会：",
+    options: [
+      "退！8块买不来我的委屈",
+      "算了留着吧——然后它在角落躺了一年",
+      "挂闲鱼「全新仅拆封」，最后邮费亏得更多",
+      "开始反思自己的消费观，反思完继续下单",
+    ],
+  },
+  {
+    scenario: "直播间最后三单",
+    family: "消费欲望",
+    signal: "冲动消费/怀疑倾向",
+    question: "刷到直播间在倒数「最后三单」，你的手：",
+    options: [
+      "已经拍下了，手比脑子快",
+      "冷笑一声「套路而已」，划走",
+      "先加购物车冷静24小时，通常就忘了",
+      "去评论区和搜索「XX 智商税」做尽调",
+    ],
+  },
+  {
+    scenario: "奶茶自由保卫战",
+    family: "消费欲望",
+    signal: "即时满足/自我合理化",
+    question: "刚立完「这个月不喝奶茶」的flag，第三天路过奶茶店，你会：",
+    options: [
+      "走进去——快乐是刚需，flag是装饰",
+      "拍张照发朋友圈「忍住了」，用公开表扬续命",
+      "绕路走，眼不见为净，意志力靠物理隔离",
+      "买了，但选三分糖，算各退一步",
+    ],
+  },
+  {
+    scenario: "差12块满减",
+    family: "消费欲望",
+    signal: "损失厌恶/凑单心理",
+    question: "购物车差 12 块到「满300减50」，你会：",
+    options: [
+      "再逛半小时，凑一件「反正用得上」的",
+      "直接下单，我的时间比 12 块贵",
+      "呼叫朋友拼单，人脉就是省钱",
+      "冷静下来发现根本不需要，整单放弃",
+    ],
+  },
+  {
+    scenario: "偷偷自动续费",
+    family: "消费欲望",
+    signal: "权利意识/维权成本",
+    question: "发现某 App 悄悄自动续费了三个月。你会：",
+    options: [
+      "当场取消+投诉+退款三连，一分都不能少",
+      "算了，反正也在用",
+      "取消之后发个避雷帖，造福人类",
+      "顺势研究出一套「开会员最优解」攻略",
+    ],
+  },
+  {
+    scenario: "旅行最后一天",
+    family: "消费欲望",
+    signal: "纪念方式/体验vs占有",
+    question: "旅行最后一天，你的行李箱状态：",
+    options: [
+      "塞满冰箱贴和钥匙扣，快乐要有实体",
+      "只买了特产给别人，自己啥也没买",
+      "空的，照片就是最好的纪念品",
+      "多了一个当地看着很美、回家就闲置的东西",
+    ],
+  },
+  {
+    scenario: "干饭决策瘫痪",
+    family: "消费欲望",
+    signal: "决策疲劳/算法依赖",
+    question: "到饭点了，打开外卖App，你会：",
+    options: [
+      "三平台比价领券，算出今日最优解",
+      "饿了就点，哪个顺手点哪个",
+      "翻了半小时不知道吃啥，最后点了老三样",
+      "跟着短视频种草下单，吃什么算法说了算",
+    ],
+  },
+  // ── 失控意外 ──────────────────────────────────────────────
+  {
+    scenario: "被阴阳怪气",
+    family: "失控意外",
+    signal: "冲突反应",
+    question: "有人阴阳怪气地内涵你，你通常会：",
+    options: [
+      "假装没听懂，礼貌微笑，内心已经拉黑",
+      "当场怼回去，绝不吃这个亏",
+      "回家越想越气，写一整篇小作文但没有发出去",
+      "转头就忘，过会儿该笑笑该吃吃",
+    ],
+  },
+  {
     scenario: "计划突然取消",
+    family: "失控意外",
     signal: "控制感/开放性",
     question: "期待了一周的约被临时取消，你的第一反应：",
     options: [
@@ -127,6 +587,7 @@ const SCENARIO_POOL: ScenarioQuestion[] = [
   },
   {
     scenario: "意外被夸",
+    family: "失控意外",
     signal: "自尊/接纳赞美",
     question: "有人当众认真地夸你，你会：",
     options: [
@@ -137,69 +598,63 @@ const SCENARIO_POOL: ScenarioQuestion[] = [
     ],
   },
   {
-    scenario: "深夜emo",
-    signal: "情绪调节/阴影面",
-    question: "凌晨一点睡不着，情绪突然涌上来，你会：",
+    scenario: "手机忘在家",
+    family: "失控意外",
+    signal: "失控耐受/数字依赖",
+    question: "出门半小时发现手机忘家里了，今天还有一整天安排，你会：",
     options: [
-      "打开备忘录写小作文，写完就删",
-      "找歌单里最丧的歌循环，主动emo到底",
-      "爬起来干点具体的事，把情绪饿死",
-      "翻通讯录想找人说话，翻到最后谁也没找",
+      "折返，迟到也要回去拿——没手机等于裸奔",
+      "算了，体验一天数字排毒，甚至有点兴奋",
+      "全程坐立难安，总觉得全世界都在找我",
+      "借同事手机给自己的微信发一句「我没事」",
     ],
   },
   {
-    scenario: "朋友借钱",
-    signal: "边界感/宜人性",
-    question: "不算太熟的朋友开口借两千块，你会：",
+    scenario: "地铁坐过站",
+    family: "失控意外",
+    signal: "错误归因/情绪转化",
+    question: "地铁上刷手机，一抬头坐过了三站。你会：",
     options: [
-      "借，但心里默默把这钱当送出去了",
-      "直接说手头紧，拒绝得毫无心理负担",
-      "问清楚用途和还款时间，像个信贷经理",
-      "借一半，既表了心意又留了底线",
+      "「今天重开吧」，烦躁值直接拉满",
+      "下车反向坐回来，顺便发个朋友圈自嘲",
+      "将错就错，在陌生的站下车逛逛",
+      "开始复盘自己为什么走神，上升到人生管理",
     ],
   },
   {
-    scenario: "电梯遇老板",
-    signal: "社交面具/权威关系",
-    question: "电梯里只有你和大老板，还有三十层，你会：",
+    scenario: "暴雨没带伞",
+    family: "失控意外",
+    signal: "问题解决风格",
+    question: "下班时突降暴雨，你没带伞，门口挤满等雨停的人。你会：",
     options: [
-      "主动没话找话，气氛尬但我先动手",
-      "全程盯手机假装处理要事，手心出汗",
-      "点头微笑后安静站着，沉默也是一种体面",
-      "趁机汇报一句最近的成果，机会都是挤出来的",
+      "冲了，淋雨也是一种自由",
+      "等，顺便观察谁会第一个冲出去",
+      "点个跑腿送伞，花钱解决一切",
+      "打电话给朋友求救，顺便聊到雨停",
     ],
   },
   {
-    scenario: "天降五百万",
-    signal: "欲望结构/价值取向",
-    question: "如果明天到账五百万，你的第一个动作是：",
+    scenario: "KTV话筒到手",
+    family: "失控意外",
+    signal: "暴露焦虑/表现策略",
+    question: "KTV里话筒突然递到你手上，全场看着你。你会：",
     options: [
-      "先存起来，生活照旧，谁也不告诉",
-      "当天辞职，机票买最近的一班",
-      "列一张报恩清单，把欠的人情都还了",
-      "研究怎么让它变成一千万",
+      "直接开唱，气氛我来扛",
+      "疯狂摆手推给别人，打死不唱",
+      "唱，但只唱能藏进大合唱的那种",
+      "点一首搞怪说唱，用整活代替实力",
     ],
   },
   {
-    scenario: "好友吐槽对象",
-    signal: "共情方式/支持风格",
-    question: "好友深夜找你哭诉感情问题，你的支持方式是：",
+    scenario: "陌生来电",
+    family: "失控意外",
+    signal: "不确定性应对",
+    question: "一个陌生号码打来电话，你会：",
     options: [
-      "先骂对方一小时，情绪价值拉满",
-      "冷静分析利弊，附赠行动建议清单",
-      "不说话，就听着，偶尔递一句「我在」",
-      "讲一个自己更惨的故事，用对比疗法止痛",
-    ],
-  },
-  {
-    scenario: "完全自由的周末",
-    signal: "能量取向",
-    question: "一个没有任何安排的周末，你的理想过法：",
-    options: [
-      "关机躺平，人类勿近，充电中",
-      "约满两天的局，独处才是消耗",
-      "上午出门假装精致，下午回家瘫成液体",
-      "临时起意去一个没去过的地方，一个人也行",
+      "直接接，是福不是祸",
+      "等它响完，回头搜一下号码归属",
+      "秒挂，有事发短信",
+      "盯着屏幕纠结到它自己停",
     ],
   },
 ];
@@ -207,14 +662,26 @@ const SCENARIO_POOL: ScenarioQuestion[] = [
 /** 每次拆盒实际抽取的题数——节奏优先，池子负责多样性。 */
 const SCENARIO_SAMPLE_COUNT = 3;
 
-/** 无放回随机抽 n 道（Fisher-Yates 局部洗牌）。 */
+/**
+ * 跨域分层抽样：随机选 n 个不同生活域，每域随机抽 1 道。
+ * 保证三道题信号不同域、组合数量级远超单纯抽 3（6域×4题 → 数百种组合）。
+ */
 function sampleScenarios(n: number = SCENARIO_SAMPLE_COUNT): ScenarioQuestion[] {
-  const pool = [...SCENARIO_POOL];
-  for (let i = pool.length - 1; i > pool.length - 1 - n; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j]!, pool[i]!];
+  const byFamily = new Map<ScenarioFamily, ScenarioQuestion[]>();
+  for (const q of SCENARIO_POOL) {
+    const list = byFamily.get(q.family) ?? [];
+    list.push(q);
+    byFamily.set(q.family, list);
   }
-  return pool.slice(pool.length - n);
+  const families = [...byFamily.keys()];
+  for (let i = families.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [families[i], families[j]] = [families[j]!, families[i]!];
+  }
+  return families.slice(0, n).map((fam) => {
+    const list = byFamily.get(fam)!;
+    return list[Math.floor(Math.random() * list.length)]!;
+  });
 }
 
 /**
@@ -1143,10 +1610,14 @@ function ScenarioStep(props: {
   onBack: () => void;
 }) {
   const [chosen, setChosen] = useState<string | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customText, setCustomText] = useState("");
 
-  // Reset the tap-feedback highlight when the question changes.
+  // Reset the tap-feedback highlight + custom input when the question changes.
   useEffect(() => {
     setChosen(null);
+    setCustomOpen(false);
+    setCustomText("");
   }, [props.index]);
 
   const q = props.question;
@@ -1158,12 +1629,18 @@ function ScenarioStep(props: {
     window.setTimeout(() => props.onAnswer(opt), 180);
   }
 
+  function submitCustom() {
+    const text = customText.trim();
+    if (!text || chosen) return;
+    pick(text);
+  }
+
   return (
     <div className="flex w-full flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <span className="paper-question-hint">情境题 · {q.scenario}</span>
         <h3 className="paper-question">{q.question}</h3>
-        <span className="paper-question-hint">点一个最像你的选项，自动进入下一题</span>
+        <span className="paper-question-hint">点一个最像你的选项，自动进入下一题；都不像就自己写</span>
       </div>
 
       <div className="flex w-full flex-col gap-2.5">
@@ -1181,6 +1658,40 @@ function ScenarioStep(props: {
             </span>
           </button>
         ))}
+
+        {/* Custom answer — same option affordance, letter "自". */}
+        {customOpen ? (
+          <div className={`paper-option ${chosen && chosen === customText.trim() ? "paper-option--chosen" : ""}`}>
+            <span className="paper-option-letter">自</span>
+            <input
+              autoFocus
+              type="text"
+              value={customText}
+              maxLength={40}
+              placeholder="用你自己的话说，这种时候你会……"
+              onChange={(e) => setCustomText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitCustom();
+                if (e.key === "Escape") setCustomOpen(false);
+              }}
+              className="paper-option-text bg-transparent outline-none placeholder:text-surface-50"
+            />
+            <button
+              type="button"
+              onClick={submitCustom}
+              disabled={!customText.trim()}
+              className="paper-option-arrow !opacity-100 disabled:!opacity-30"
+              aria-label="提交自定义答案"
+            >
+              →
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setCustomOpen(true)} className="paper-option">
+            <span className="paper-option-letter">自</span>
+            <span className="paper-option-text paper-muted">以上都不像我——自己写一个</span>
+          </button>
+        )}
       </div>
 
       <button
