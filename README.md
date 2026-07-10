@@ -35,6 +35,30 @@ bun run dev:web            # :5173 (or next free port)
 
 Realtime voice needs `BAILIAN_WORKSPACE_ID` (get it via `bl auth login --console --console-site domestic` then `bl workspace list`) — the feature gracefully disables itself if unset. The Tripo 3D figurine bonus needs the Tripo product activated once in the Bailian console model marketplace (`/cn-beijing/?tab=model#/model-market/all`).
 
+## Public demo
+
+Hackathon judging entry:
+
+```text
+https://tsekaluk.github.io/doi-10.518x-blindbox.2026.001/
+```
+
+The judging page is served by GitHub Pages (`gh-pages` branch) because `vercel.app`
+DNS is unreliable on the current network and can surface certificate mismatch
+errors. The page calls the public API at:
+
+```text
+https://persona-blindbox-2026.loca.lt
+```
+
+On the demo host, `/workspace/persona-blindbox/run-public-demo.sh` keeps the Bun
+API server and the fixed localtunnel subdomain alive. If the host restarts, start
+it again from `/workspace/persona-blindbox`:
+
+```bash
+nohup ./run-public-demo.sh >demo-watchdog.log 2>&1 &
+```
+
 ## Quality gates
 
 ```bash

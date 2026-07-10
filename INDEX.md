@@ -12,6 +12,8 @@ Purpose:
 Inventory:
 
 - `README.md`: how to run; agent-infrastructure install notes.
+  - Public judging entry: `https://tsekaluk.github.io/doi-10.518x-blindbox.2026.001/`
+    backed by `https://persona-blindbox-2026.loca.lt`.
 - `ARCHITECTURE.md`: module map, the four productization seams, post-hackathon checklist.
 - `PERSONA_THEORY.md`: the 6-layer persona-generation theory + full academic citations.
 - `apps/web/`: Vite + React 19 + Tailwind v4 + Astryx + R3F/Drei + GSAP + Zustand frontend.
