@@ -122,14 +122,27 @@ export function createHttpAIService(config: HttpAIServiceConfig): AIService {
     },
 
     async generatePersona(prompt, opts): Promise<Persona> {
-      const raw = await complete(
-        [
-          { role: "system", content: PERSONA_SYSTEM_PROMPT },
-          { role: "user", content: prompt },
-        ],
-        { thinkingBudget: 1500, ...opts, enableThinking: opts?.enableThinking ?? true },
-      );
-      return PersonaSchema.parse(extractJson(raw));
+      // Retry the whole completion up to 3 attempts: flaky networks reset the
+      // upstream SSE mid-stream, and the model can occasionally emit JSON that
+      // fails schema validation — both are safely retryable from scratch.
+      let lastErr: unknown;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const raw = await complete(
+            [
+              { role: "system", content: PERSONA_SYSTEM_PROMPT },
+              { role: "user", content: prompt },
+            ],
+            { thinkingBudget: 1500, ...opts, enableThinking: opts?.enableThinking ?? true },
+          );
+          return PersonaSchema.parse(extractJson(raw));
+        } catch (err) {
+          lastErr = err;
+          if (opts?.signal?.aborted) throw err;
+          await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+        }
+      }
+      throw lastErr;
     },
 
     async synthesizeSpeech(text, voiceId, opts) {

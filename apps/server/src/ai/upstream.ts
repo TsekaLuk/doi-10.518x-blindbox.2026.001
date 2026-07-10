@@ -81,7 +81,11 @@ interface BlSpawnResult {
   code: number;
 }
 
-async function runBl(args: string[]): Promise<BlSpawnResult> {
+/** Transient network faults seen live on this machine's network — retryable. */
+const TRANSIENT_NET_ERROR =
+  /ECONNRESET|CONNECT_TIMEOUT|ETIMEDOUT|fetch failed|Network request failed|socket disconnected/i;
+
+async function runBlOnce(args: string[]): Promise<BlSpawnResult> {
   const proc = Bun.spawn({ cmd: ["bl", ...args], stdout: "pipe", stderr: "pipe" });
   const [stdout, stderr] = await Promise.all([
     new Response(proc.stdout).text(),
@@ -89,6 +93,24 @@ async function runBl(args: string[]): Promise<BlSpawnResult> {
   ]);
   const code = await proc.exited;
   return { stdout, stderr, code };
+}
+
+/**
+ * Run `bl` with automatic retries on transient network faults (ECONNRESET /
+ * connect timeouts against dashscope/OSS were observed killing otherwise-fine
+ * image/TTS calls mid-demo). Non-network failures surface immediately.
+ */
+async function runBl(args: string[], attempts = 3): Promise<BlSpawnResult> {
+  let last: BlSpawnResult = { stdout: "", stderr: "", code: -1 };
+  for (let i = 0; i < attempts; i++) {
+    last = await runBlOnce(args);
+    if (last.code === 0) return last;
+    const output = `${last.stderr}\n${last.stdout}`;
+    if (!TRANSIENT_NET_ERROR.test(output)) return last;
+    console.error(`[vibe] bl transient network failure (attempt ${i + 1}/${attempts}), retrying:`, args[0], args[1]);
+    await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+  }
+  return last;
 }
 
 /**
@@ -168,10 +190,22 @@ export async function upstreamImage(
     throw new Error(`bl image generate returned no urls: ${stdout}`);
   }
 
-  const imgRes = await fetch(ossUrl);
-  if (!imgRes.ok) {
-    throw new Error(`Failed to fetch generated image bytes: ${imgRes.status}`);
+  // The OSS refetch rides the same flaky network — retry transient faults too.
+  let imgRes: Response | undefined;
+  for (let i = 0; i < 3; i++) {
+    try {
+      imgRes = await fetch(ossUrl);
+      if (imgRes.ok) break;
+      throw new Error(`status ${imgRes.status}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (i === 2 || !TRANSIENT_NET_ERROR.test(msg)) {
+        throw new Error(`Failed to fetch generated image bytes: ${msg}`);
+      }
+      await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+    }
   }
+  if (!imgRes?.ok) throw new Error("Failed to fetch generated image bytes");
   const buf = await imgRes.arrayBuffer();
   const base64 = Buffer.from(buf).toString("base64");
   const contentType = imgRes.headers.get("content-type") ?? "image/png";
