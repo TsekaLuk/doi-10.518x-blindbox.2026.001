@@ -10,7 +10,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ai } from "../ai/client";
 import { FigurineViewer, useTripo3D } from "../components/FigurineViewer";
 import { LAYER_COLORS } from "../paper/citations";
-import { AnnouncementBanner, CitationSup, References, SectionHeading } from "../paper/PaperChrome";
+import {
+  AnnouncementBanner,
+  ArxivStamp,
+  CitationSup,
+  References,
+  RunningHeader,
+  SectionHeading,
+} from "../paper/PaperChrome";
 import { PaperAbstract, PaperHero, scrollToSection } from "../paper/PaperHero";
 import { downloadCanvasAsPng, drawResultCard } from "../persona/resultCard";
 import { useRealtimeVoice } from "../realtime/useRealtimeVoice";
@@ -49,18 +56,23 @@ async function fetchPersonaPortrait(prompt: string): Promise<ImageResult> {
 }
 
 /**
- * 情境题 — 精选 3 道（从原先 6 道里挑信号最丰富的三个不同心理角度：
- * 冲动/自我呈现、压力应对、冲突反应），保持"啪啪啪点几下就完事"的节奏。
+ * 情境题题库 — 12 道，各探一个不同的心理信号维度（标注在 signal 字段，
+ * 供维护者对照六层理论；不展示给用户、不进 prompt）。每次拆盒随机抽
+ * SCENARIO_SAMPLE_COUNT 道：节奏仍是"啪啪啪点几下"，但"再抽一次"会
+ * 遇到新题，重玩不腻，AI 拿到的行为信号也更多样。
  */
 interface ScenarioQuestion {
   scenario: string;
+  /** 该题主要探测的信号维度（内部注记）。 */
+  signal: string;
   question: string;
   options: string[];
 }
 
-const SCENARIO_QUESTIONS: ScenarioQuestion[] = [
+const SCENARIO_POOL: ScenarioQuestion[] = [
   {
     scenario: "摸鱼被抓包",
+    signal: "冲动控制/自我呈现",
     question: "老板突然走到你工位后面，而你屏幕上开着的是购物车。你的反应是：",
     options: [
       "秒切页面到Excel，面不改色，心跳到嗓子眼",
@@ -71,6 +83,7 @@ const SCENARIO_QUESTIONS: ScenarioQuestion[] = [
   },
   {
     scenario: "DDL前夜",
+    signal: "压力应对",
     question: "DDL前一晚，东西还没做完，你的状态是：",
     options: [
       "疯狂列清单、做计划表，把焦虑转化成条理",
@@ -81,6 +94,7 @@ const SCENARIO_QUESTIONS: ScenarioQuestion[] = [
   },
   {
     scenario: "被阴阳怪气",
+    signal: "冲突反应",
     question: "有人阴阳怪气地内涵你，你通常会：",
     options: [
       "假装没听懂，礼貌微笑，内心已经拉黑",
@@ -89,7 +103,119 @@ const SCENARIO_QUESTIONS: ScenarioQuestion[] = [
       "转头就忘，过会儿该笑笑该吃吃",
     ],
   },
+  {
+    scenario: "消息已读不回",
+    signal: "依恋焦虑/社交解读",
+    question: "重要的人已读你消息六小时没回，你在想：",
+    options: [
+      "TA一定是忙，等等就好——但每十分钟看一次手机",
+      "开始逐字复盘自己发的话哪里说错了",
+      "无所谓，回不回是TA的事，我该干嘛干嘛",
+      "直接再发一条「？」，有话当面问清楚",
+    ],
+  },
+  {
+    scenario: "计划突然取消",
+    signal: "控制感/开放性",
+    question: "期待了一周的约被临时取消，你的第一反应：",
+    options: [
+      "松了口气——终于可以名正言顺躺着了",
+      "失落半小时，然后立刻给自己安排新节目",
+      "嘴上说没事，实际一晚上都在轻微记仇",
+      "顺势把这天过成计划外的冒险，随便上一辆公交",
+    ],
+  },
+  {
+    scenario: "意外被夸",
+    signal: "自尊/接纳赞美",
+    question: "有人当众认真地夸你，你会：",
+    options: [
+      "立刻自贬两句把话题岔开，脚趾抠地",
+      "表面淡定说谢谢，回家反复回放二十遍",
+      "大方收下并顺势发挥，我值得",
+      "怀疑TA是不是有事要求我",
+    ],
+  },
+  {
+    scenario: "深夜emo",
+    signal: "情绪调节/阴影面",
+    question: "凌晨一点睡不着，情绪突然涌上来，你会：",
+    options: [
+      "打开备忘录写小作文，写完就删",
+      "找歌单里最丧的歌循环，主动emo到底",
+      "爬起来干点具体的事，把情绪饿死",
+      "翻通讯录想找人说话，翻到最后谁也没找",
+    ],
+  },
+  {
+    scenario: "朋友借钱",
+    signal: "边界感/宜人性",
+    question: "不算太熟的朋友开口借两千块，你会：",
+    options: [
+      "借，但心里默默把这钱当送出去了",
+      "直接说手头紧，拒绝得毫无心理负担",
+      "问清楚用途和还款时间，像个信贷经理",
+      "借一半，既表了心意又留了底线",
+    ],
+  },
+  {
+    scenario: "电梯遇老板",
+    signal: "社交面具/权威关系",
+    question: "电梯里只有你和大老板，还有三十层，你会：",
+    options: [
+      "主动没话找话，气氛尬但我先动手",
+      "全程盯手机假装处理要事，手心出汗",
+      "点头微笑后安静站着，沉默也是一种体面",
+      "趁机汇报一句最近的成果，机会都是挤出来的",
+    ],
+  },
+  {
+    scenario: "天降五百万",
+    signal: "欲望结构/价值取向",
+    question: "如果明天到账五百万，你的第一个动作是：",
+    options: [
+      "先存起来，生活照旧，谁也不告诉",
+      "当天辞职，机票买最近的一班",
+      "列一张报恩清单，把欠的人情都还了",
+      "研究怎么让它变成一千万",
+    ],
+  },
+  {
+    scenario: "好友吐槽对象",
+    signal: "共情方式/支持风格",
+    question: "好友深夜找你哭诉感情问题，你的支持方式是：",
+    options: [
+      "先骂对方一小时，情绪价值拉满",
+      "冷静分析利弊，附赠行动建议清单",
+      "不说话，就听着，偶尔递一句「我在」",
+      "讲一个自己更惨的故事，用对比疗法止痛",
+    ],
+  },
+  {
+    scenario: "完全自由的周末",
+    signal: "能量取向",
+    question: "一个没有任何安排的周末，你的理想过法：",
+    options: [
+      "关机躺平，人类勿近，充电中",
+      "约满两天的局，独处才是消耗",
+      "上午出门假装精致，下午回家瘫成液体",
+      "临时起意去一个没去过的地方，一个人也行",
+    ],
+  },
 ];
+
+/** 每次拆盒实际抽取的题数——节奏优先，池子负责多样性。 */
+const SCENARIO_SAMPLE_COUNT = 3;
+
+/** 无放回随机抽 n 道（Fisher-Yates 局部洗牌）。 */
+function sampleScenarios(n: number = SCENARIO_SAMPLE_COUNT): ScenarioQuestion[] {
+  const pool = [...SCENARIO_POOL];
+  for (let i = pool.length - 1; i > pool.length - 1 - n; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j]!, pool[i]!];
+  }
+  return pool.slice(pool.length - n);
+}
 
 /**
  * 心情/状态自述 chips —— 用户报的是"当下发生了什么"（输入信号），
@@ -166,6 +292,44 @@ const MBTI_TYPES: Array<{ code: string; nick: string }> = [
   { code: "ESFP", nick: "表演者" },
 ];
 
+/**
+ * SBTI (Silly Big Type Indicator) — the 2026 viral joke personality test by
+ * B站@蛆肉儿串儿. 25 standard + 2 special outcomes (HHHH 兜底 / DRUNK 隐藏).
+ * Type list verified against the original open-source data
+ * (github.com/pingfanfan/SBTI data/types.json); card artwork from the
+ * community wiki (github.com/serenakeyitan/sbti-wiki), mirrored into
+ * public/sbti/. Codes follow the wiki's canonical spellings (OJBK/WOC!/FUCK).
+ */
+const SBTI_TYPES: Array<{ code: string; cn: string; img: string }> = [
+  { code: "CTRL", cn: "拿捏者", img: "CTRL.png" },
+  { code: "ATM-er", cn: "送钱者", img: "ATM-er.png" },
+  { code: "Dior-s", cn: "屌丝", img: "Dior-s.jpg" },
+  { code: "BOSS", cn: "领导者", img: "BOSS.png" },
+  { code: "THAN-K", cn: "感恩者", img: "THAN-K.png" },
+  { code: "OH-NO", cn: "哦不人", img: "OH-NO.png" },
+  { code: "GOGO", cn: "行者", img: "GOGO.png" },
+  { code: "SEXY", cn: "尤物", img: "SEXY.png" },
+  { code: "LOVE-R", cn: "多情者", img: "LOVE-R.png" },
+  { code: "MUM", cn: "妈妈", img: "MUM.png" },
+  { code: "FAKE", cn: "伪人", img: "FAKE.png" },
+  { code: "OJBK", cn: "无所谓人", img: "OJBK.png" },
+  { code: "MALO", cn: "吗喽", img: "MALO.png" },
+  { code: "JOKE-R", cn: "小丑", img: "JOKE-R.jpg" },
+  { code: "WOC!", cn: "握草人", img: "WOC.png" },
+  { code: "THIN-K", cn: "思考者", img: "THIN-K.png" },
+  { code: "SHIT", cn: "愤世者", img: "SHIT.png" },
+  { code: "ZZZZ", cn: "装死者", img: "ZZZZ.png" },
+  { code: "POOR", cn: "贫困者", img: "POOR.png" },
+  { code: "MONK", cn: "僧人", img: "MONK.png" },
+  { code: "IMSB", cn: "傻者", img: "IMSB.png" },
+  { code: "SOLO", cn: "孤儿", img: "SOLO.png" },
+  { code: "FUCK", cn: "草者", img: "FUCK.png" },
+  { code: "DEAD", cn: "死者", img: "DEAD.png" },
+  { code: "IMFW", cn: "废物", img: "IMFW.png" },
+  { code: "HHHH", cn: "傻乐者", img: "HHHH.png" },
+  { code: "DRUNK", cn: "酒鬼", img: "DRUNK.png" },
+];
+
 const GENDER_OPTIONS = ["女", "男", "其他", "不想说"] as const;
 const ZODIAC_OPTIONS = [
   "白羊座",
@@ -195,17 +359,22 @@ function composeProfileClause(p: ProfileInfo): string {
 }
 
 /** Total screens: mood chips + optional profile + N scenario questions. */
-const JOURNEY_LENGTH = 2 + SCENARIO_QUESTIONS.length;
+const JOURNEY_LENGTH = 2 + SCENARIO_SAMPLE_COUNT;
 /** journeyIndex of the first scenario question. */
 const SCENARIO_BASE = 2;
 
 /** Merge moods (screen 0) + profile priors (screen 1) + scenario answers into one paragraph. */
-function composeJourneyPrompt(moods: string[], profile: ProfileInfo, answers: string[]): string {
+function composeJourneyPrompt(
+  moods: string[],
+  profile: ProfileInfo,
+  questions: ScenarioQuestion[],
+  answers: string[],
+): string {
   const moodPart = moods.length > 0 ? `TA现在的状态是：${moods.join("、")}。` : "";
   const profilePart = composeProfileClause(profile);
-  const scenarioParts = SCENARIO_QUESTIONS.map((q, i) => (answers[i] ? `${q.scenario}——${answers[i]}` : null)).filter(
-    (p): p is string => Boolean(p),
-  );
+  const scenarioParts = questions
+    .map((q, i) => (answers[i] ? `${q.scenario}——${answers[i]}` : null))
+    .filter((p): p is string => Boolean(p));
   const scenarioPart = scenarioParts.length > 0 ? `在这些情境里，TA是这样反应的：${scenarioParts.join("；")}。` : "";
   return [moodPart, profilePart, scenarioPart].filter(Boolean).join("");
 }
@@ -218,6 +387,9 @@ export function PersonaFlow() {
   const [journeyIndex, setJourneyIndex] = useState(0);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [profile, setProfile] = useState<ProfileInfo>(EMPTY_PROFILE);
+  // Per-run random sample from the pool — re-rolled on reset so "再抽一次"
+  // serves fresh questions.
+  const [scenarioQuestions, setScenarioQuestions] = useState<ScenarioQuestion[]>(() => sampleScenarios());
   const [scenarioAnswers, setScenarioAnswers] = useState<string[]>([]);
   const [error, setError] = useState<string | undefined>();
 
@@ -270,6 +442,7 @@ export function PersonaFlow() {
     setJourneyIndex(0);
     setSelectedTags([]);
     setProfile(EMPTY_PROFILE);
+    setScenarioQuestions(sampleScenarios()); // fresh questions for the re-pull
     setScenarioAnswers([]);
     setError(undefined);
     setLastPrompt("");
@@ -389,8 +562,8 @@ export function PersonaFlow() {
     const next = [...scenarioAnswers];
     next[qIdx] = optionText;
     setScenarioAnswers(next);
-    if (qIdx >= SCENARIO_QUESTIONS.length - 1) {
-      void openBlindBox(composeJourneyPrompt(selectedTags, profile, next));
+    if (qIdx >= scenarioQuestions.length - 1) {
+      void openBlindBox(composeJourneyPrompt(selectedTags, profile, scenarioQuestions, next));
     } else {
       setJourneyIndex(journeyIndex + 1);
     }
@@ -481,6 +654,8 @@ export function PersonaFlow() {
         </div>
       ) : null}
       <div className="paper-doc" style={{ opacity: dimmed ? 0.08 : 1 }}>
+      <ArxivStamp />
+      <RunningHeader />
       <AnnouncementBanner />
       <PaperHero />
       <PaperAbstract />
@@ -504,6 +679,7 @@ export function PersonaFlow() {
             profile={profile}
             onProfileChange={setProfile}
             onNextFromProfile={goNextFromProfile}
+            scenarioQuestions={scenarioQuestions}
             onAnswerScenario={answerScenario}
             onBack={goBackJourney}
             onJumpTo={setJourneyIndex}
@@ -622,6 +798,7 @@ function InputJourney(props: {
   profile: ProfileInfo;
   onProfileChange: (p: ProfileInfo) => void;
   onNextFromProfile: () => void;
+  scenarioQuestions: ScenarioQuestion[];
   onAnswerScenario: (optionText: string) => void;
   onBack: () => void;
   onJumpTo: (i: number) => void;
@@ -656,7 +833,7 @@ function InputJourney(props: {
             <ProfileStep profile={props.profile} onChange={props.onProfileChange} onNext={props.onNextFromProfile} />
           ) : (
             <ScenarioStep
-              question={SCENARIO_QUESTIONS[props.journeyIndex - SCENARIO_BASE]}
+              question={props.scenarioQuestions[props.journeyIndex - SCENARIO_BASE]}
               index={props.journeyIndex}
               onAnswer={props.onAnswerScenario}
               onBack={props.onBack}
@@ -759,6 +936,9 @@ function ProfileStep(props: { profile: ProfileInfo; onChange: (p: ProfileInfo) =
             </button>
           ))}
         </div>
+        <span className="paper-figure-caption" style={{ textAlign: "left" }}>
+          图 0：刺激材料（16Personalities 卡通头像，仅作审美外壳——本文对 MBTI 的立场见摘要）。
+        </span>
       </div>
 
       <div className="paper-profile-group">
@@ -812,13 +992,46 @@ function ProfileStep(props: { profile: ProfileInfo; onChange: (p: ProfileInfo) =
       </div>
 
       <div className="paper-profile-group">
-        <span className="paper-profile-label">SBTI</span>
+        <span className="paper-profile-label">
+          SBTI <span className="paper-question-hint">（测过的话，点你的型）</span>
+        </span>
+        {/* Card artwork: sbti-wiki (see SBTI_TYPES). Same visual-picker pattern as MBTI above. */}
+        <div className="paper-mbti-grid">
+          {SBTI_TYPES.map((t) => {
+            const value = `${t.code} ${t.cn}`;
+            const active = profile.sbti === value;
+            return (
+              <button
+                key={t.code}
+                type="button"
+                onClick={() => props.onChange({ ...profile, sbti: active ? "" : value })}
+                className={`paper-mbti-card ${active ? "paper-mbti-card--active" : ""}`}
+              >
+                <img
+                  src={`/sbti/${t.img}`}
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  className="paper-mbti-card-icon"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                <span className="paper-mbti-card-letter">{t.code}</span>
+                <span className="paper-mbti-card-label">{t.cn}</span>
+              </button>
+            );
+          })}
+        </div>
+        <span className="paper-figure-caption" style={{ textAlign: "left" }}>
+          图 0′：补充刺激材料（SBTI）。编号带撇是因为它和图 0 地位相同，且同样不算数。
+        </span>
         <input
           type="text"
           className="paper-profile-input"
-          value={profile.sbti}
+          value={SBTI_TYPES.some((t) => `${t.code} ${t.cn}` === profile.sbti) ? "" : profile.sbti}
           onChange={(e) => props.onChange({ ...profile, sbti: e.target.value })}
-          placeholder="SBTI 测过的话，填你的结果代号"
+          placeholder="没有你的型？自己填"
         />
       </div>
 
@@ -1230,6 +1443,8 @@ function GeneratingState() {
   return (
     <div className="flex flex-col gap-4">
       <div className="h-16 w-16 animate-pulse rounded-lg border border-shockingly-green/60 bg-shockingly-green/10" />
+      {/* "代码即正文" —— 诊断过程以一行终端命令的姿态出现在论文正文里。 */}
+      <p className="paper-doi paper-meta">$ qwen3.7-plus --thinking --layers=6 --sample=你</p>
       <p className="paper-body">
         正在计算六层诊断<span className="animate-pulse">...</span>
       </p>
@@ -1306,6 +1521,20 @@ function PortraitSkeleton(props: { startedAt: number | null }) {
       {props.startedAt ? (
         <p className="paper-meta">已等待 {formatElapsed(now - props.startedAt)}（通常 30-90 秒）</p>
       ) : null}
+      <p className="paper-meta inline-flex items-center gap-1.5">
+        由
+        {/* Qwen mark (transparent SVG) from lobehub/lobe-icons (packages/static-svg). */}
+        <img
+          src="/brand/qwen-color.svg"
+          alt="通义千问"
+          loading="lazy"
+          className="inline-block h-3.5 w-auto align-middle"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
+        通义千问 × 万相 显影
+      </p>
     </div>
   );
 }
@@ -1586,6 +1815,74 @@ function DiscussionSection(props: {
 
       {props.chatOpen ? <ChatPanel voice={props.voice} /> : null}
       {props.figurineOpen && canFigurine ? <FigurinePanel tripo={props.tripo} /> : null}
+
+      <BibTexBlock persona={props.persona} />
+    </div>
+  );
+}
+
+/**
+ * "如需引用本尊" — 一键复制的 BibTeX，title 动态填抽到的人格。
+ * 黑底代码块是本页唯一的深色面（DESIGN.md 的 nested-panel #191919），
+ * 呼应 banner 那句"代码即正文"；复制到社交平台的效果是"我被引用了"。
+ */
+function BibTexBlock(props: { persona: Persona }) {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    },
+    [],
+  );
+
+  const citeKey = `blindbox2026${props.persona.code.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()}`;
+  const bib = `@article{${citeKey},
+  title   = {人格盲盒：${props.persona.name}},
+  author  = {你 and 通义千问},
+  journal = {Journal of Vibe Coding},
+  volume  = {1},
+  number  = {1},
+  pages   = {1--∞},
+  year    = {2026},
+  doi     = {10.518x/blindbox.2026.001},
+  note    = {样本量 n=1，重测信度未知，且不打算知道}
+}`;
+
+  function copyBib() {
+    navigator.clipboard
+      .writeText(bib)
+      .then(() => {
+        setCopied(true);
+        if (timerRef.current) window.clearTimeout(timerRef.current);
+        timerRef.current = window.setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {});
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <span className="paper-meta">如需引用本尊，请使用以下 BibTeX：</span>
+      <pre className="paper-bibtex">
+        <button
+          type="button"
+          className={`paper-bibtex-copy ${copied ? "paper-bibtex-copy--done" : ""}`}
+          onClick={copyBib}
+        >
+          {copied ? "已复制 ✓" : "复制"}
+        </button>
+        {bib.split("\n").map((line, i) =>
+          line.includes("title") ? (
+            <span key={i} className="paper-bibtex-title">
+              {line}
+              {"\n"}
+            </span>
+          ) : (
+            `${line}\n`
+          ),
+        )}
+      </pre>
     </div>
   );
 }
@@ -1605,7 +1902,7 @@ function ChatPanel(props: { voice: ReturnType<typeof useRealtimeVoice> }) {
 
   return (
     <div className="flex w-full flex-col gap-3 rounded-lg border border-[rgba(14,16,15,0.16)] bg-[#fffef5]/75 p-6 backdrop-blur">
-      <span className="paper-eyebrow">{`{ 口头质询 }`}</span>
+      <span className="paper-eyebrow">{`{ 附录 A · 口头质询 }`}</span>
 
       {voice.status === "unavailable" ? (
         <Text type="supporting" color="secondary">
@@ -1633,13 +1930,18 @@ function ChatPanel(props: { voice: ReturnType<typeof useRealtimeVoice> }) {
           ) : null}
 
           {voice.transcript.length > 0 ? (
-            <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg bg-surface-25/20 p-3 text-left">
-              {voice.transcript.map((line, i) => (
-                <Text key={i} type="supporting">
-                  {line}
-                </Text>
-              ))}
-            </div>
+            <>
+              <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg bg-surface-25/20 p-3 text-left">
+                {voice.transcript.map((line, i) => (
+                  <Text key={i} type="supporting">
+                    {line}
+                  </Text>
+                ))}
+              </div>
+              <span className="paper-figure-caption" style={{ textAlign: "left" }}>
+                附录 A：质询逐字稿（实时转写，未经润色，被试的每一句口误都保留）。
+              </span>
+            </>
           ) : null}
         </>
       )}
@@ -1671,7 +1973,12 @@ function FigurinePanel(props: { tripo: ReturnType<typeof useTripo3D> }) {
       ) : null}
 
       {tripo.status === "ready" && tripo.glbUrl ? (
-        <FigurineViewer glbUrl={tripo.glbUrl} className="h-80 w-full rounded-lg" />
+        <figure className="flex w-full flex-col gap-2">
+          <FigurineViewer glbUrl={tripo.glbUrl} className="h-80 w-full rounded-lg" />
+          <figcaption className="paper-figure-caption">
+            图 2：被试实物化结果（Tripo 生成，可拖拽旋转——请轻拿轻放）。
+          </figcaption>
+        </figure>
       ) : null}
     </div>
   );

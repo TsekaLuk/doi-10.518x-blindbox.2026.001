@@ -337,21 +337,27 @@
   transform: translate(0, 0);
 }
 
-/* ── 表 1 editorial table ────────────────────────────────────────── */
+/* ── 表 1 — booktabs 三线表（学术表格的正统画法）───────────────────
+   顶线/底线加粗、表头下一条细线、行间无线。比逐行画线的网页表格
+   干净得多，也是"看一眼就像论文"的最便宜一击。 */
 .paper-table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--vibe-text-body-sm);
   line-height: 1.4;
+  border-top: 2px solid var(--paper-ink);
+  border-bottom: 2px solid var(--paper-ink);
 }
 .paper-table th,
 .paper-table td {
-  border-top: 1px solid var(--paper-hairline);
-  border-bottom: 1px solid var(--paper-hairline);
-  padding: 14px 12px;
+  border: none;
+  padding: 12px;
   text-align: left;
   vertical-align: top;
   color: var(--paper-ink);
+}
+.paper-table thead th {
+  border-bottom: 1px solid var(--paper-ink);
 }
 .paper-table th {
   color: var(--paper-ink-muted);
@@ -768,6 +774,252 @@
   from { transform: translate(0, 0) scale(0.96); }
   to { transform: translate(6vmax, -7vmax) scale(1.1); }
 }
+/* ── arXiv 式左缘竖排编号 ────────────────────────────────────────── */
+/* 预印本 PDF 左页边那串旋转 90° 的编号,原样搬进屏幕左缘。纯装饰,
+ * 不可交互;内容列(max 1280px)两侧留白足够时才出现。 */
+.paper-arxiv-stamp {
+  position: fixed;
+  left: 18px;
+  top: 50%;
+  z-index: 20;
+  transform: translateY(-50%) rotate(180deg);
+  writing-mode: vertical-rl;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--paper-ink-muted);
+  opacity: 0.7;
+  pointer-events: none;
+  user-select: none;
+}
+@media (max-width: 1439px) {
+  .paper-arxiv-stamp {
+    display: none;
+  }
+}
+
+/* ── Running header(滚过首屏后浮现的论文页眉)─────────────────────── */
+.paper-running-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px clamp(20px, 4vw, 48px);
+  background: rgba(255, 254, 245, 0.86);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--paper-hairline);
+  font-size: var(--vibe-text-caption);
+  color: var(--paper-ink-muted);
+  opacity: 0;
+  transform: translateY(-100%);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+  pointer-events: none;
+}
+.paper-running-header[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.paper-running-header-title {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-size: var(--vibe-text-caption);
+  font-weight: var(--vibe-font-weight-semibold);
+  color: var(--paper-ink);
+}
+.paper-running-header-title:hover {
+  color: var(--paper-green-deep);
+}
+.paper-running-header .paper-doi {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── 引用悬浮卡(arXiv HTML 式:hover 上标即见文献,不必滚到页脚)── */
+.paper-citation-tip {
+  position: absolute;
+  top: 1.9em;
+  left: 50%;
+  z-index: 40;
+  width: min(360px, 78vw);
+  transform: translateX(-50%) translateY(4px);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 14px;
+  border: 1px solid var(--paper-hairline);
+  border-radius: 8px;
+  background: #fffef8;
+  box-shadow: 0 10px 30px rgba(14, 16, 15, 0.1);
+  font-size: 13px;
+  font-weight: var(--vibe-font-weight-regular);
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--paper-ink-muted);
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.paper-citation:hover .paper-citation-tip,
+.paper-citation:focus-visible .paper-citation-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── 文末声明区(致谢/利益冲突/数据可用性/伦理/贡献)──────────────── */
+.paper-declarations {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+.paper-declarations-row {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 20px;
+  font-size: var(--vibe-text-body-sm);
+  line-height: 1.55;
+}
+.paper-declarations dt {
+  font-weight: var(--vibe-font-weight-semibold);
+  color: var(--paper-ink);
+  white-space: nowrap;
+}
+.paper-declarations dd {
+  margin: 0;
+  color: var(--paper-ink-muted);
+}
+@media (max-width: 480px) {
+  .paper-declarations-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+/* ── 式 1(display 级别的编号公式:论文的格式 × 营销站的字号)──────── */
+.paper-equation-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding-block: 8px;
+}
+.paper-equation {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+}
+.paper-equation-math {
+  flex: 1;
+  text-align: center;
+  font-weight: var(--vibe-font-weight-semibold);
+  font-size: clamp(26px, 4.6vw, 54px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--paper-ink);
+  white-space: nowrap;
+}
+.paper-equation-no {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--vibe-text-body-sm);
+  color: var(--paper-ink-muted);
+}
+@media (max-width: 640px) {
+  /* 公式整行不可折行——窄屏改为水平滚动,编号钉在右侧不动。 */
+  .paper-equation-math {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── BibTeX 代码块(本页唯一的深色面 = DESIGN.md nested panel)────── */
+.paper-bibtex {
+  position: relative;
+  margin: 0;
+  padding: 20px 22px;
+  border-radius: 8px;
+  background: #191919;
+  color: #fffce1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: pre;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.paper-bibtex-title {
+  color: #abff84;
+}
+.paper-bibtex-copy {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 252, 225, 0.35);
+  border-radius: 100px;
+  background: transparent;
+  color: #fffce1;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+.paper-bibtex-copy:hover {
+  border-color: #fffce1;
+}
+.paper-bibtex-copy--done {
+  color: #abff84;
+  border-color: rgba(171, 255, 132, 0.6);
+}
+.paper-bibtex-copy:focus-visible {
+  outline: 2px solid #abff84;
+  outline-offset: 2px;
+}
+
+/* ── 打印:⌘P 真能打出一份"你的论文" ─────────────────────────────── */
+@media print {
+  .mesh-bg,
+  .paper-running-header,
+  .paper-composer,
+  .paper-pill,
+  .paper-bibtex-copy {
+    display: none !important;
+  }
+  .paper-doc {
+    opacity: 1 !important;
+  }
+  .paper-arxiv-stamp {
+    display: block;
+    position: absolute;
+    opacity: 0.6;
+  }
+  .paper-bibtex {
+    background: transparent;
+    color: var(--paper-ink);
+    border: 1px solid var(--paper-hairline);
+  }
+  .paper-bibtex-title {
+    color: var(--paper-green-deep);
+  }
+}
+
 /* ── 无障碍:统一的键盘焦点态 ─────────────────────────────────────── */
 /* 所有可交互的 paper-* 控件共享同一套 :focus-visible 描边(品牌深绿),
  * 只在键盘导航时出现,不影响鼠标点击的视觉。 */
