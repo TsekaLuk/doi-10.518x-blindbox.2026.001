@@ -23,6 +23,7 @@ Inventory:
   - `src/realtime/useRealtimeVoice.ts`: realtime voice chat hook (WebSocket to the server relay).
   - `src/components/FigurineViewer.tsx`: Tripo 3D figurine viewer + polling hook.
   - `src/publicAsset.ts`: base-path-safe public asset URLs for GitHub Pages/subpath deploys.
+  - `public/vercel.json`: disables Vercel auto-preview builds for the generated `gh-pages` branch.
 - `apps/server/`: Bun + Hono + tRPC + SSE thin AI proxy (only place holding API keys).
   - Real Bailian integration: chat/thinking (compatible-mode), image gen + TTS (via `bl` CLI
     subprocess), Tripo 3D gen (direct DashScope REST), realtime voice (WebSocket relay via
