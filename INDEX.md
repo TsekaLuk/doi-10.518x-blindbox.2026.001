@@ -41,6 +41,8 @@ Inventory:
 - `vercel.json`: Vercel production build config for the monorepo web app.
 - `api/[...path].ts`: Vercel Functions fallback/persistent HTTP AI API for the
   Vercel-hosted demo (chat stream, image, TTS, Tripo 3D; realtime remains Bun-only).
+  `api/ai/*.ts` and `api/health.ts` are explicit Vercel route entries that reuse
+  this handler for multi-segment API paths.
 - `deploy/k8s/`: layered Kustomize deployment for the API (`base` plus production
   ingress/secret/image overlay); see its README for infrastructure requirements.
 - `tsconfig.test.json`: typecheck config for Bun test files.
